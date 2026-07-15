@@ -55,6 +55,8 @@ export function CharacterController() {
     jumpBuf: 0,
     ladderCooldown: 0, // délai avant ré-accroche après un saut d'échelle
     mantleT: 0,
+    mantlePhase: 0, // 0 = montée, 1 = bascule vers l'avant
+    mantleTargetY: 0, // altitude (centre capsule) à atteindre avant la bascule
     mantleDir: new THREE.Vector3(),
     faceYaw: Math.PI,
     stepAcc: 0,
@@ -68,16 +70,19 @@ export function CharacterController() {
   if (!ray.current) ray.current = new rapier.Ray({ x: 0, y: 0, z: 0 }, { x: 0, y: -1, z: 0 });
   const FLAGS = rapier.QueryFilterFlags.EXCLUDE_SENSORS;
 
-  const groundCast = (origin) => {
+  const cast = (ox, oy, oz, dx, dy, dz, maxToi) => {
     const r = ray.current;
-    r.origin.x = origin.x;
-    r.origin.y = origin.y;
-    r.origin.z = origin.z;
-    r.dir.x = 0;
-    r.dir.y = -1;
-    r.dir.z = 0;
-    return world.castRayAndGetNormal(r, 1.12, true, FLAGS, undefined, undefined, body.current);
+    r.origin.x = ox;
+    r.origin.y = oy;
+    r.origin.z = oz;
+    r.dir.x = dx;
+    r.dir.y = dy;
+    r.dir.z = dz;
+    return world.castRayAndGetNormal(r, maxToi, true, FLAGS, undefined, undefined, body.current);
   };
+
+  const groundCast = (origin) => cast(origin.x, origin.y, origin.z, 0, -1, 0, 1.12);
+  const toi = (hit) => (hit ? (hit.timeOfImpact ?? hit.toi) : Infinity);
 
   const teleport = (p) => {
     if (!body.current) return;
@@ -208,6 +213,8 @@ export function CharacterController() {
         // sommet : rétablissement automatique par-dessus
         s.mode = 'mantle';
         s.mantleT = 0;
+        s.mantlePhase = 0;
+        s.mantleTargetY = l.y1 + 1.05;
         s.mantleDir.set(-l.nx, 0, -l.nz);
         s.ladder = null;
         runtime.climbDir = 0;
@@ -244,11 +251,17 @@ export function CharacterController() {
     } else if (s.mode === 'mantle') {
       s.mantleT += sdt;
       body.current.setGravityScale(0, true);
-      if (s.mantleT < 0.22) {
-        body.current.setLinvel({ x: 0, y: 6.5, z: 0 }, true);
-      } else if (s.mantleT < 0.45) {
+      if (s.mantlePhase === 0) {
+        // montée verticale jusqu'à dépasser le rebord
+        body.current.setLinvel({ x: 0, y: 7, z: 0 }, true);
+        if (_pos.y >= s.mantleTargetY || s.mantleT > 0.7) {
+          s.mantlePhase = 1;
+          s.mantleT = 0;
+        }
+      } else if (s.mantleT < 0.24) {
+        // bascule par-dessus le rebord
         body.current.setLinvel(
-          { x: s.mantleDir.x * 3.6, y: 2.0, z: s.mantleDir.z * 3.6 },
+          { x: s.mantleDir.x * 3.8, y: 1.6, z: s.mantleDir.z * 3.8 },
           true
         );
       } else {
@@ -270,6 +283,48 @@ export function CharacterController() {
             body.current.setGravityScale(0, true);
             body.current.setLinvel({ x: 0, y: Math.max(0, _vel.y * 0.2), z: 0 }, true);
             audio.sfx('grab');
+          }
+        }
+      }
+
+      // Accroche de rebord : espace maintenu en l'air près du bord d'un bloc
+      // → le personnage attrape le rebord et se hisse dessus (mantle).
+      if (s.mode === 'move' && input.jump && !grounded && _vel.y < 6 && s.ladderCooldown <= 0) {
+        const bases = [];
+        if (_wish.lengthSq() > 0.04) bases.push(Math.atan2(_wish.x, _wish.z));
+        bases.push(s.faceYaw);
+        outer: for (const base of bases) {
+          for (const a of [0, -0.35, 0.35]) {
+            const dx = Math.sin(base + a);
+            const dz = Math.cos(base + a);
+            // 1. un mur devant le buste ?
+            const wall = cast(_pos.x, _pos.y + 0.3, _pos.z, dx, 0, dz, 1.05);
+            const wallToi = toi(wall);
+            if (!wall || Math.abs(wall.normal.y) > 0.4) continue;
+            // la face doit être tournée vers nous
+            if (wall.normal.x * dx + wall.normal.z * dz > -0.2) continue;
+            // 2. de l'air au-dessus du rebord ?
+            const clear = cast(_pos.x, _pos.y + 1.9, _pos.z, dx, 0, dz, wallToi + 0.7);
+            if (clear) continue;
+            // 3. un dessus praticable, à portée de main ?
+            const overX = _pos.x + dx * (wallToi + 0.45);
+            const overZ = _pos.z + dz * (wallToi + 0.45);
+            const top = cast(overX, _pos.y + 1.9, overZ, 0, -1, 0, 2.2);
+            if (!top || top.normal.y < 0.6) continue;
+            const topY = _pos.y + 1.9 - toi(top);
+            const rise = topY - (_pos.y - 0.95); // hauteur du rebord vs pieds
+            if (rise < 0.3 || rise > 2.6) continue;
+            // c'est un rebord : on s'y hisse
+            s.mode = 'mantle';
+            s.mantleT = 0;
+            s.mantlePhase = 0;
+            s.mantleTargetY = topY + 1.05;
+            s.mantleDir.set(dx, 0, dz);
+            s.ladderCooldown = 0.3;
+            body.current.setGravityScale(0, true);
+            body.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+            audio.sfx('grab');
+            break outer;
           }
         }
       }

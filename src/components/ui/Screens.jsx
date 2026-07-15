@@ -135,7 +135,10 @@ export function ControlsHint() {
         <b>Z Q S D</b> se déplacer
       </span>
       <span>
-        <b>Espace</b> sauter · avancer vers une échelle pour grimper
+        <b>Espace</b> sauter · maintenir près d'un rebord pour se hisser
+      </span>
+      <span>
+        <b>Échelles</b> avancer contre pour grimper
       </span>
       <span>
         <b>Shift</b> sprint

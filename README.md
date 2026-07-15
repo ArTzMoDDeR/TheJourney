@@ -23,6 +23,7 @@ npm run build && npm run preview
 |---|---|
 | Se déplacer | **Z Q S D** (ou WASD — détection par position physique des touches) |
 | Sauter | **Espace** |
+| Se hisser sur un rebord | **Espace maintenu** en l'air près du bord d'un bloc |
 | Grimper | avancer contre une **échelle** (Z/S monte/descend, Espace saute de l'échelle) |
 | Sprint | **Shift** (maintenu, au sol) |
 | Slow motion | **Clic droit** (maintenu — jauge limitée, se recharge au sol et sur les échelles) |
