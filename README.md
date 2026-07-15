@@ -1,8 +1,8 @@
 # THE JOURNEY
 
-**The Journey** est un jeu de plateforme/escalade en vue troisième personne, jouable dans le navigateur. Vous incarnez une silhouette qui gravit une tour verticale représentant les âges de la vie — de la chambre d'enfance jusqu'au paradis — en s'accrochant à de vrais objets du quotidien devenus montagnes.
+**The Journey** est un jeu de plateforme/escalade en vue troisième personne, jouable dans le navigateur. Un voyageur en cape rouge gravit quatre mondes ouverts empilés dans le ciel — les âges d'une vie — de la chambre d'enfance jusqu'au paradis.
 
-Une vie racontée sans un mot : plus on monte, plus on vieillit.
+Une vie en une journée : la nuit douce de l'enfance, l'aube de l'école, le jour blanc du bureau, l'heure dorée du lâcher-prise.
 
 ## Jouer
 
@@ -14,8 +14,7 @@ npm run dev      # http://localhost:5173
 Build de production (déployable tel quel sur Netlify, `netlify.toml` inclus) :
 
 ```bash
-npm run build
-npm run preview
+npm run build && npm run preview
 ```
 
 ## Contrôles
@@ -23,72 +22,64 @@ npm run preview
 | Action | Touche |
 |---|---|
 | Se déplacer | **Z Q S D** (ou WASD — détection par position physique des touches) |
-| Sauter | **Espace** (appui court) |
-| S'accrocher / grimper | **Espace maintenu** près d'une surface grimpable |
-| Saut depuis le mur | relâcher **Espace** en tenant une direction |
-| Lâcher prise | relâcher **Espace** sans direction |
+| Sauter | **Espace** |
+| Grimper | avancer contre une **échelle** (Z/S monte/descend, Espace saute de l'échelle) |
 | Sprint | **Shift** (maintenu, au sol) |
-| Slow motion | **Clic droit** (maintenu — jauge limitée, se recharge au sol et accroché) |
+| Slow motion | **Clic droit** (maintenu — jauge limitée, se recharge au sol et sur les échelles) |
 | Caméra | Souris |
 | Pause | **Échap** |
 
-En grimpe : **Z/S** montent/descendent, **Q/D** se déplacent latéralement le long de la surface. En haut d'un rebord, le rétablissement (mantle) est automatique.
+On ne grimpe **que** sur les échelles : échelle-jouet, échelle de bibliothèque, gouttières, espaliers de gym, échelles de maintenance, échelles de corde, échelles de lumière… Lever les yeux montre toujours à peu près le chemin (les faisceaux dorés marquent les portes de chapitre).
 
-## Les quatre biomes
+## Les quatre mondes ouverts
 
-1. **La Chambre** (0–90 m) — cocon chaud, échelle géante : Lego, piles de livres, commodes, tiroirs mobiles.
-2. **L'École** (90–185 m) — néons froids, casiers, grilles de cour, silhouettes d'ombre.
-3. **Le Bureau** (185–285 m) — grisaille répétitive, classeurs, écrans, serveurs, monte-charges.
-4. **Le Paradis** (285–372 m) — lumière et silence : nuages solides, colonnes de lumière, courants ascendants, plateformes qui se dissolvent, gravité réduite dans les derniers mètres.
+1. **La Chambre** (nuit) — une chambre d'enfant géante : lit-trampoline, tour de Lego, grande bibliothèque, mobile de planètes, coffre à jouets, armoire. Trois grandes routes vers la fenêtre entrouverte, des raccourcis au trampoline, un canard qui fait couic sous le lit.
+2. **L'École** (aube) — une cour de récré flottante : matelas de gym-trampoline, préau, panier de basket, corniches étroites de la façade, escalier de secours, espaliers du gymnase, poutre d'équilibre, couloirs de casiers, tour de l'horloge (bloquée à 15h59), passerelle et monte-charge.
+3. **Le Bureau** (jour blanc) — un open space suspendu, trois étages : labyrinthe de cubicles, ascenseur, échafaudage, chaise de bureau-trampoline, couloir de serveurs, plante géante qui n'a jamais cessé de pousser, pont de câbles, cabine d'ascenseur brisée, colonne de clim.
+4. **Le Paradis** (heure dorée) — un archipel au-dessus de la mer de nuages, gravité réduite : échelles de lumière, nuages-trampolines, nuages qui se dissolvent, colonnade brisée, portes flottantes, ballons — et au sommet, sous l'arbre doré, le nounours de la chambre qui attendait depuis le début.
 
-## Speedrun
+Autour : ciel qui change avec l'altitude, lune puis soleil, étoiles, ville infinie à l'horizon, montagnes, oiseaux, mer de nuages.
 
-- Chrono en temps réel, démarré au premier input, arrêté au plateau final.
-- **Carte à seed fixe** : identique pour tous, apprenable par cœur.
-- Splits par biome affichés en fin de run.
-- Meilleur temps sauvegardé en local (`localStorage`).
-- Chute = retour au dernier checkpoint, sans écran punitif.
-- L'endurance (jauge) se vide accroché au mur : on progresse, on ne campe pas.
+## Speedrun & exploration
+
+- Chrono temps réel, splits par chapitre, meilleur temps en localStorage.
+- **Monde entièrement fixe** : apprenable par cœur, plusieurs chemins par chapitre, trampolines et courants d'air comme raccourcis assumés.
+- **Checkpoints uniquement aux portes de chapitre.** Tomber, c'est retomber dans le monde d'en dessous — on ne meurt jamais vraiment, on retombe en enfance. (Tomber dans le vide extérieur ramène à la porte du chapitre.)
+- **8 souvenirs** cachés à collectionner (✦), comptés en fin de run.
 
 ## Stack technique
 
-- [React Three Fiber](https://github.com/pmndrs/react-three-fiber) + [drei](https://github.com/pmndrs/drei) (Three.js)
-- [Rapier](https://rapier.rs/) via `@react-three/rapier` — physique déterministe, character controller custom
-- Zustand (état de jeu), Vite (build), `@react-three/postprocessing` (bloom, vignette, aberration chromatique)
-- Audio 100 % génératif WebAudio : musique adaptative par biome, SFX synthétisés, aucun asset
+- React Three Fiber + drei (Three.js), Rapier (`@react-three/rapier`), Zustand, Vite
+- **Zéro asset externe** : textures procédurales (canvas 2D — bois, briques, papier d'écolier, post-its, horloges, dessins d'enfant…), personnage et décors modélisés en primitives, musique générative WebAudio par monde + SFX synthétisés
+- Post-processing : bloom, vignette, aberration chromatique en slow-motion
 
 ## Architecture
 
 ```
 src/
-  constants.js                  # hauteurs des biomes, physique, gameplay
-  store/
-    gameStore.js                # Zustand : phase, checkpoint, splits, best
-    runtime.js                  # état mutable par frame (hors React)
-  utils/input.js                # clavier (e.code → ZQSD/WASD), souris
+  constants.js                  # chapitres, physique, vers du poème
+  store/ (gameStore, runtime)   # état de jeu / état par frame (hors React)
+  utils/ (input, textures, rng) # clavier ZQSD, textures canvas, seed fixe
   audio/AudioSystem.js          # musique générative + SFX
   components/
-    player/
-      CharacterController.jsx   # LE cœur : move/hang/climb/mantle/wall-jump,
-                                # slow-mo, stamina, respawn, splits
-      CameraRig.jsx             # spring-arm, collision caméra, FOV dynamique
-      PlayerModel.jsx           # silhouette low-poly animée procéduralement
-    systems/
-      Stepper.jsx               # stepping physique manuel × timeScale (slow-mo)
-      EnvironmentManager.jsx    # fog/lumières interpolés selon l'altitude
-      Effects.jsx               # post-processing
-    level/
-      route.js                  # génération déterministe de la route (seed fixe)
-      Tower.jsx                 # assemblage des 4 biomes + checkpoints + arrivée
-      pieces.jsx                # Solid, Mover, WindColumn, DissolvingCloud…
-      materials.js              # matériaux partagés
-    biomes/                     # habillage : Bedroom, School, Office, Paradise
-    ui/                         # HUD (rAF direct DOM), écrans titre/pause/fin
+    player/                     # contrôleur (move/ladder/mantle), caméra
+                                # spring-arm, voyageur procédural animé
+    systems/                    # stepping physique manuel (slow-mo),
+                                # ambiance par altitude, post-processing
+    ui/                         # HUD rAF, écrans titre/pause/fin
+  level/
+    kit.jsx                     # briques de gameplay : B, Ladder, Trampoline,
+                                # Elevator, WindColumn, CloudPuff, Gate, Souvenir…
+    ladders.js                  # registres échelles + trampolines (géométrie pure)
+    Sky.jsx                     # dôme, astres, nuages, ville infinie, oiseaux
+    World.jsx                   # assemblage des chapitres
+  worlds/                       # les 4 mondes ouverts, entièrement level-designés
 ```
 
 ### Notes d'implémentation
 
-- **Escalade** : raycasts en éventail depuis le buste (priorité à la direction d'input), surfaces taguées `grabbable` via `userData` des corps Rapier, angle de surface contrôlé (60–105°). Colliders boîtes propres, séparés des meshes visuels.
-- **Slow motion** : la simulation Rapier est en `<Physics paused>` et avancée manuellement chaque frame avec `delta × timeScale` — pause et ralenti propres, sans toucher aux vitesses.
-- **Chrono** : temps réel non clampé (reste exact même si le rendu ralentit).
-- Un handle de debug est exposé : `window.__journey` (runtime, store, route).
+- **Échelles** : registre géométrique pur (pas de colliders) ; le contrôleur teste chaque frame si le joueur pousse contre une face d'échelle. Rétablissement automatique au sommet, saut d'échelle avec Espace.
+- **Trampolines** : zones enregistrées, rebond déclenché par le raycast de sol du contrôleur — déterministe, indépendant des événements de collision.
+- **Slow motion** : la simulation Rapier est en `<Physics paused>` et avancée manuellement avec `delta × timeScale`.
+- **Chrono** : temps réel non clampé (exact même si le rendu ralentit).
+- Handle de debug : `window.__journey` (runtime, store, échelles, trampolines).

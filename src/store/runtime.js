@@ -12,8 +12,7 @@ export const runtime = {
   timer: 0, // chrono speedrun (temps réel)
   timerRunning: false,
 
-  // jauges (0..1)
-  stamina: 1,
+  // jauge slow-motion (0..1)
   slowmo: 1,
   slowmoActive: false,
 
@@ -22,12 +21,13 @@ export const runtime = {
   playerPos: new THREE.Vector3(...START_POS),
   playerVel: new THREE.Vector3(),
   grounded: true,
-  mode: 'move', // move | hang | mantle
+  mode: 'move', // move | ladder | mantle
   speed: 0,
-  faceYaw: Math.PI, // orientation visuelle du personnage
-  hangNormal: new THREE.Vector3(0, 0, 1),
-  climbAmount: 0, // intensité du mouvement en grimpe (pour l'anim/audio)
+  faceYaw: Math.PI,
+  climbDir: 0, // -1/0/1 sur l'échelle (pour l'anim)
   inWind: 0, // nombre de colonnes de vent contenant le joueur
+  landedAt: -10, // simTime du dernier atterrissage (squash anim)
+  bouncedAt: -10, // simTime du dernier rebond de trampoline
 
   // caméra
   camYaw: 0,
@@ -48,7 +48,6 @@ export function resetRuntime() {
   runtime.simTime = 0;
   runtime.timer = 0;
   runtime.timerRunning = false;
-  runtime.stamina = 1;
   runtime.slowmo = 1;
   runtime.slowmoActive = false;
   runtime.playerPos.set(...START_POS);
@@ -57,6 +56,7 @@ export function resetRuntime() {
   runtime.mode = 'move';
   runtime.speed = 0;
   runtime.faceYaw = Math.PI;
+  runtime.climbDir = 0;
   runtime.inWind = 0;
   runtime.biome = 'bedroom';
   runtime.biomeLabel = 'La Chambre';

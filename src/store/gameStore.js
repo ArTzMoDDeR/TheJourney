@@ -2,10 +2,13 @@ import { create } from 'zustand';
 import { runtime, resetRuntime } from './runtime';
 import { START_POS } from '../constants';
 
-// Checkpoint de départ : position de respawn + altitude de mort (chute)
-export const START_CHECKPOINT = { pos: START_POS, killY: -30 };
+// Checkpoint de départ ; les seuls autres checkpoints sont les portes
+// entre chapitres (décision de design : pas de checkpoint intermédiaire).
+export const START_CHECKPOINT = { pos: START_POS, killY: -60, label: 'La Chambre' };
 
-const BEST_KEY = 'thejourney-best-v1';
+export const TOTAL_SOUVENIRS = 8;
+
+const BEST_KEY = 'thejourney-best-v2';
 
 function loadBest() {
   try {
@@ -18,7 +21,8 @@ function loadBest() {
 export const useGame = create((set, get) => ({
   phase: 'title', // title | playing | paused | finished
   checkpoint: START_CHECKPOINT,
-  splits: [], // [{ name, label, t }] — temps au passage de chaque biome
+  splits: [], // [{ name, label, t }] — temps au passage de chaque chapitre
+  souvenirs: [], // ids des souvenirs ramassés pendant ce run
   finalTime: null,
   best: loadBest(),
   isNewBest: false,
@@ -38,6 +42,9 @@ export const useGame = create((set, get) => ({
     if (cp.pos[1] > cur.pos[1]) set({ checkpoint: cp });
   },
 
+  collect: (id) =>
+    set((s) => (s.souvenirs.includes(id) ? {} : { souvenirs: [...s.souvenirs, id] })),
+
   addSplit: (name, label, t) =>
     set((s) =>
       s.splits.some((x) => x.name === name)
@@ -52,7 +59,7 @@ export const useGame = create((set, get) => ({
     let best = get().best;
     let isNewBest = false;
     if (!best || t < best.time) {
-      best = { time: t, splits: get().splits };
+      best = { time: t, splits: get().splits, souvenirs: get().souvenirs.length };
       isNewBest = true;
       try {
         localStorage.setItem(BEST_KEY, JSON.stringify(best));
@@ -70,6 +77,7 @@ export const useGame = create((set, get) => ({
       phase: 'playing',
       checkpoint: START_CHECKPOINT,
       splits: [],
+      souvenirs: [],
       finalTime: null,
       isNewBest: false,
       resetToken: s.resetToken + 1,

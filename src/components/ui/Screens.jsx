@@ -71,6 +71,7 @@ export function EndScreen({ onRestart }) {
   const splits = useGame((s) => s.splits);
   const best = useGame((s) => s.best);
   const isNewBest = useGame((s) => s.isNewBest);
+  const souvenirs = useGame((s) => s.souvenirs.length);
 
   if (phase !== 'finished') return null;
 
@@ -78,6 +79,7 @@ export function EndScreen({ onRestart }) {
     <div className="overlay dim end-screen">
       <div className="final-time">{formatTime(finalTime)}</div>
       {isNewBest && <div className="new-best">Nouveau meilleur temps</div>}
+      <div className="best-line">✦ {souvenirs}/8 souvenirs retrouvés</div>
       <div className="splits">
         {splits.map((sp) => (
           <div className="row" key={sp.name}>
@@ -133,7 +135,7 @@ export function ControlsHint() {
         <b>Z Q S D</b> se déplacer
       </span>
       <span>
-        <b>Espace</b> sauter · maintenir près d'un mur pour s'accrocher
+        <b>Espace</b> sauter · avancer vers une échelle pour grimper
       </span>
       <span>
         <b>Shift</b> sprint

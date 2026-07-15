@@ -111,18 +111,31 @@ canvas {
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
 }
 
-.hud .biome-label {
+.hud .poem {
   position: absolute;
-  top: 62px;
+  top: 68px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.75rem;
-  letter-spacing: 0.45em;
-  text-indent: 0.45em;
-  text-transform: uppercase;
-  color: rgba(245, 238, 222, 0.75);
+  font-size: 1.05rem;
+  font-style: italic;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  color: rgba(245, 238, 222, 0.85);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.7);
   opacity: 0;
-  transition: opacity 1.2s ease;
+  transition: opacity 2s ease;
+}
+
+.hud .souvenirs {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  color: rgba(255, 233, 168, 0.85);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
 }
 
 .hud .gauges {

@@ -278,6 +278,21 @@ class AudioSystem {
       case 'respawn':
         this.blip(440, 0.6, 0.04, 'sine', 220);
         break;
+      case 'bounce':
+        this.blip(180, 0.35, 0.09, 'sine', 560);
+        this.thud(900, 0.2, 0.08);
+        break;
+      case 'quack': {
+        this.blip(620, 0.12, 0.09, 'sawtooth', 320);
+        setTimeout(() => this.blip(540, 0.16, 0.08, 'sawtooth', 260), 140);
+        break;
+      }
+      case 'souvenir': {
+        [880, 1108.7, 1318.5].forEach((f, i) =>
+          setTimeout(() => this.blip(f, 0.9, 0.045), i * 90)
+        );
+        break;
+      }
       case 'finish': {
         const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51];
         notes.forEach((f, i) => setTimeout(() => this.blip(f, 1.6, 0.05), i * 180));

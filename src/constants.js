@@ -1,35 +1,39 @@
-// Constantes globales du jeu — hauteurs des biomes, physique, gameplay.
-// La carte est à seed fixe : ces valeurs définissent LA carte, identique pour tous.
+// Constantes globales du jeu — hauteurs des chapitres, physique, gameplay.
+// La carte est entièrement fixe : même monde pour tous les joueurs.
 
 export const BIOMES = [
-  { name: 'bedroom', label: 'La Chambre', from: 0, to: 90 },
-  { name: 'school', label: "L'École", from: 90, to: 185 },
-  { name: 'office', label: 'Le Bureau', from: 185, to: 285 },
-  { name: 'paradise', label: 'Le Paradis', from: 285, to: 400 },
+  { name: 'bedroom', label: 'La Chambre', from: -60, to: 70 },
+  { name: 'school', label: "L'École", from: 70, to: 150 },
+  { name: 'office', label: 'Le Bureau', from: 150, to: 230 },
+  { name: 'paradise', label: 'Le Paradis', from: 230, to: 400 },
 ];
 
-export const FINISH_Y = 372; // altitude du plateau final
-export const LOW_GRAVITY_Y = 330; // au-dessus : gravité réduite (lâcher-prise)
+// Une vie en une journée : nuit douce de l'enfance, aube de l'école,
+// jour blanc du bureau, heure dorée du paradis.
+export const POEMS = {
+  bedroom: 'Tout commence dans une chambre, la nuit.',
+  school: "À l'aube, on apprend les règles.",
+  office: 'Puis les jours se ressemblent. On oublie pourquoi on monte.',
+  paradise: "Un jour, on lâche prise. Et tout devient léger.",
+};
+
+export const FINISH_Y = 302; // plateau final
+export const LOW_GRAVITY_Y = 238; // au-dessus : gravité réduite (lâcher-prise)
 
 export const GRAVITY = -28;
 
 // Déplacement
-export const WALK_SPEED = 6;
-export const SPRINT_SPEED = 10.5;
+export const WALK_SPEED = 6.5;
+export const SPRINT_SPEED = 11;
 export const JUMP_VELOCITY = 11.5;
-export const CLIMB_SPEED = 3.2;
+export const CLIMB_SPEED = 4.2; // sur les échelles
 
 // Slow motion
 export const SLOWMO_SCALE = 0.3;
 export const SLOWMO_DRAIN = 0.33; // par seconde réelle
-export const SLOWMO_REGEN = 0.22; // par seconde, au sol ou accroché
+export const SLOWMO_REGEN = 0.25; // par seconde, au sol ou sur une échelle
 
-// Stamina
-export const STAMINA_DRAIN_HANG = 0.09; // accroché immobile
-export const STAMINA_DRAIN_CLIMB = 0.045; // en grimpe active
-export const STAMINA_REGEN = 0.55; // au sol
-
-export const START_POS = [0, 1.6, 15];
+export const START_POS = [-20, 1.5, 30];
 
 export function biomeAt(y) {
   for (let i = BIOMES.length - 1; i >= 0; i--) {

@@ -6,7 +6,7 @@ import { initInput } from './utils/input';
 import { useGame } from './store/gameStore';
 import { CharacterController } from './components/player/CharacterController';
 import { CameraRig } from './components/player/CameraRig';
-import { Tower } from './components/level/Tower';
+import { World } from './level/World';
 import { Stepper } from './components/systems/Stepper';
 import { EnvironmentManager } from './components/systems/EnvironmentManager';
 import { Effects } from './components/systems/Effects';
@@ -41,7 +41,7 @@ export default function App() {
       <Canvas
         shadows
         dpr={[1, 1.75]}
-        camera={{ fov: 62, near: 0.1, far: 320, position: [0, 4, 24] }}
+        camera={{ fov: 62, near: 0.1, far: 1800, position: [-20, 5, 42] }}
         onCreated={({ gl }) => {
           glRef.current = gl;
         }}
@@ -59,7 +59,7 @@ export default function App() {
           <Stepper />
           <CharacterController />
           <CameraRig />
-          <Tower />
+          <World />
         </Physics>
         <Effects />
       </Canvas>
