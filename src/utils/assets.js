@@ -78,9 +78,7 @@ export const MODELS = {
 
 export const CHARACTER_URL = '/models/character/Superhero_Male_FullBody.gltf';
 
-// Lance le préchargement de tous les modèles utilisés + le personnage,
-// pour que l'écran de chargement reflète le vrai téléchargement.
+// Précharge le personnage (le seul asset lourd du monde simple actuel).
 export function preloadAll() {
   useGLTF.preload(CHARACTER_URL);
-  Object.values(MODELS).forEach((u) => useGLTF.preload(u));
 }
