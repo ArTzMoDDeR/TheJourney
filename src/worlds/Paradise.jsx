@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { M } from '../components/level/materials';
-import { B, Cyl, Ladder, Trampoline, Souvenir, WindColumn, CloudPuff, FinishZone } from '../level/kit';
+import { B, Cyl, Ladder, Trampoline, Souvenir, WindColumn, CloudPuff, FinishZone, Gate } from '../level/kit';
 import { mulberry32 } from '../utils/rng';
 import { runtime } from '../store/runtime';
 
@@ -173,6 +173,7 @@ export function ParadiseWorld() {
       </mesh>
       <Angel pos={[-14, 234, -28]} yaw={0} />
       <Souvenir id="photo" pos={[-14, 235.6, -32.5]} />
+      <Gate pos={[-14, 236, -14]} killY={190} label="Le Paradis" beaconHeight={40} />
       {/* colonnes brisées */}
       {[
         [-28, -12, 4.5],

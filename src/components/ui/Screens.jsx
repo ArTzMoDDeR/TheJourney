@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useGame } from '../../store/gameStore';
+import { useGame, TOTAL_SOUVENIRS } from '../../store/gameStore';
 import { runtime } from '../../store/runtime';
 import { formatTime } from '../../utils/time';
 import { audio } from '../../audio/AudioSystem';
@@ -79,7 +79,7 @@ export function EndScreen({ onRestart }) {
     <div className="overlay dim end-screen">
       <div className="final-time">{formatTime(finalTime)}</div>
       {isNewBest && <div className="new-best">Nouveau meilleur temps</div>}
-      <div className="best-line">✦ {souvenirs}/8 souvenirs retrouvés</div>
+      <div className="best-line">✦ {souvenirs}/{TOTAL_SOUVENIRS} souvenirs retrouvés</div>
       <div className="splits">
         {splits.map((sp) => (
           <div className="row" key={sp.name}>

@@ -2,51 +2,64 @@ import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { runtime } from '../../store/runtime';
-import { fabricTexture } from '../../utils/textures';
+import { robeTexture } from '../../utils/textures';
 
-// LE VOYAGEUR — personnage entièrement procédural mais avec une âme :
-// tunique rouge à liseré doré (hommage à Journey), capuche, regard lumineux,
-// écharpe qui flotte, bras et jambes articulés (coudes/genoux).
-// Animations : idle (respiration + regard), course (cycle jambes/bras),
-// saut, chute (cape qui s'évase), échelle (montée main sur main),
-// squash à l'atterrissage, stretch au trampoline.
+// LE VOYAGEUR — tunique rouge tissée à motifs dorés (hommage à Journey),
+// capuche effilée, regard lumineux, longue écharpe qui ondule.
+// Bras/jambes articulés (coudes, genoux), animations procédurales :
+// idle, course, saut, chute (cape évasée), échelle, squash/stretch.
 
 const cloak = new THREE.MeshStandardMaterial({
-  map: fabricTexture('#8a2f2b', '#6e2320'),
+  map: robeTexture(),
+  roughness: 0.8,
+  emissive: '#3a0f0c',
+  emissiveIntensity: 0.22,
+});
+const cloakPlain = new THREE.MeshStandardMaterial({
+  color: '#8a2f2b',
   roughness: 0.85,
   emissive: '#3a0f0c',
-  emissiveIntensity: 0.25,
+  emissiveIntensity: 0.22,
 });
 const trim = new THREE.MeshStandardMaterial({
   color: '#d9a441',
-  roughness: 0.4,
-  metalness: 0.4,
-  emissive: '#7a5210',
-  emissiveIntensity: 0.4,
+  roughness: 0.35,
+  metalness: 0.5,
+  emissive: '#8a5c14',
+  emissiveIntensity: 0.5,
 });
 const limb = new THREE.MeshStandardMaterial({
-  color: '#2a2436',
-  roughness: 0.8,
-  emissive: '#151022',
-  emissiveIntensity: 0.3,
+  color: '#241f30',
+  roughness: 0.75,
+  emissive: '#141020',
+  emissiveIntensity: 0.35,
 });
 const scarfMat = new THREE.MeshStandardMaterial({
   color: '#f2e3c2',
-  roughness: 0.9,
-  emissive: '#5a4c30',
-  emissiveIntensity: 0.25,
+  roughness: 0.85,
+  emissive: '#6a5a38',
+  emissiveIntensity: 0.3,
   side: THREE.DoubleSide,
 });
-const faceDark = new THREE.MeshStandardMaterial({ color: '#12101e', roughness: 0.6 });
+const scarfTip = new THREE.MeshStandardMaterial({
+  color: '#d9a441',
+  roughness: 0.7,
+  emissive: '#7a5210',
+  emissiveIntensity: 0.5,
+  side: THREE.DoubleSide,
+});
+const faceDark = new THREE.MeshStandardMaterial({ color: '#0e0c18', roughness: 0.4 });
 const eyes = new THREE.MeshStandardMaterial({
   color: '#fff',
-  emissive: '#ffd9a0',
-  emissiveIntensity: 2.4,
+  emissive: '#ffe2ae',
+  emissiveIntensity: 3,
 });
 
 function damp(cur, target, lambda, dt) {
   return THREE.MathUtils.damp(cur, target, lambda, dt);
 }
+
+const SCARF_N = 6;
 
 export function PlayerModel() {
   const root = useRef();
@@ -54,9 +67,8 @@ export function PlayerModel() {
   const parts = useRef({});
   const anim = useRef({ runPh: 0, climbPh: 0 }).current;
 
-  const upperGeo = useMemo(() => new THREE.CapsuleGeometry(0.07, 0.26, 4, 8), []);
-  const lowerGeo = useMemo(() => new THREE.CapsuleGeometry(0.06, 0.24, 4, 8), []);
-  const scarfGeo = useMemo(() => new THREE.BoxGeometry(0.16, 0.02, 0.26), []);
+  const upperGeo = useMemo(() => new THREE.CapsuleGeometry(0.062, 0.26, 4, 10), []);
+  const lowerGeo = useMemo(() => new THREE.CapsuleGeometry(0.052, 0.24, 4, 10), []);
 
   const set = (name) => (el) => {
     parts.current[name] = el;
@@ -76,11 +88,9 @@ export function PlayerModel() {
     const speed = runtime.speed;
     const vy = runtime.playerVel.y;
 
-    // avance des cycles
     anim.runPh += dt * (4 + speed * 1.1);
     anim.climbPh += dt * Math.abs(runtime.climbDir) * 6;
 
-    // cibles d'articulations
     let armL = 0.1, armR = 0.1, elbL = -0.3, elbR = -0.3, spread = 0.1;
     let thighL = 0, thighR = 0, shinL = 0.05, shinR = 0.05;
     let lean = 0, bob = 0, hood = 0, flare = 1, scarfLift = 0;
@@ -133,7 +143,7 @@ export function PlayerModel() {
         shinL = 0.5;
         shinR = 0.35;
         lean = -0.14;
-        flare = 1.22;
+        flare = 1.25;
         scarfLift = 1.0;
         hood = -0.2;
       }
@@ -142,7 +152,6 @@ export function PlayerModel() {
       const ph = anim.runPh;
       thighL = Math.sin(ph) * 1.0 * amp;
       thighR = -Math.sin(ph) * 1.0 * amp;
-      // le genou plie pendant le retour de la jambe
       shinL = Math.max(0.08, -Math.sin(ph - 0.7)) * 1.15 * amp;
       shinR = Math.max(0.08, Math.sin(ph - 0.7)) * 1.15 * amp;
       armL = -Math.sin(ph) * 0.85 * amp;
@@ -153,7 +162,6 @@ export function PlayerModel() {
       bob = Math.abs(Math.sin(ph)) * 0.05 * amp;
       scarfLift = 0.25 + amp * 0.3;
     } else {
-      // idle : respiration, regard qui se promène
       bob = Math.sin(time * 1.7) * 0.018;
       armL = 0.08 + Math.sin(time * 1.7) * 0.03;
       armR = 0.08 - Math.sin(time * 1.7) * 0.03;
@@ -179,20 +187,19 @@ export function PlayerModel() {
     p.robe.scale.x = damp(p.robe.scale.x, flare, 8, dt);
     p.robe.scale.z = damp(p.robe.scale.z, flare, 8, dt);
 
-    // écharpe : vague qui court le long des segments
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < SCARF_N; i++) {
       const seg = p[`scarf${i}`];
       if (!seg) continue;
-      const wave = Math.sin(time * (5 + speed * 0.5) - i * 0.9) * (0.12 + speed * 0.02);
+      const wave = Math.sin(time * (5 + speed * 0.5) - i * 0.8) * (0.13 + speed * 0.02);
       seg.rotation.x = damp(
         seg.rotation.x,
-        0.35 + wave - scarfLift * (0.5 + i * 0.18),
+        0.32 + wave - scarfLift * (0.45 + i * 0.14),
         10,
         dt
       );
+      seg.rotation.z = damp(seg.rotation.z, Math.sin(time * 2.4 - i) * 0.06, 6, dt);
     }
 
-    // squash & stretch (atterrissage / trampoline)
     const sq = squash.current;
     if (sq) {
       let sy = 1;
@@ -204,95 +211,89 @@ export function PlayerModel() {
     }
   }, -1);
 
+  // écharpe : chaîne récursive de segments effilés
+  const scarfChain = (i) => {
+    if (i >= SCARF_N) return null;
+    const w = 0.18 - i * 0.018;
+    return (
+      <group ref={set(`scarf${i}`)}>
+        <mesh material={i >= SCARF_N - 2 ? scarfTip : scarfMat} position={[0, 0, -0.12]}>
+          <boxGeometry args={[w, 0.025, 0.24]} />
+        </mesh>
+        <group position={[0, 0, -0.24]}>{scarfChain(i + 1)}</group>
+      </group>
+    );
+  };
+
   return (
     <group ref={root}>
       <group ref={squash}>
         <group ref={set('torso')}>
-          {/* tunique évasée */}
+          {/* tunique évasée, motifs dorés tissés */}
           <group ref={set('robe')}>
-            <mesh castShadow position={[0, 0.05, 0]} material={cloak}>
-              <cylinderGeometry args={[0.2, 0.34, 0.95, 12]} />
-            </mesh>
-            {/* liseré doré à l'ourlet */}
-            <mesh position={[0, -0.4, 0]} material={trim}>
-              <cylinderGeometry args={[0.345, 0.35, 0.06, 12]} />
+            <mesh castShadow position={[0, 0.02, 0]} material={cloak}>
+              <cylinderGeometry args={[0.17, 0.38, 1.02, 18]} />
             </mesh>
           </group>
-          {/* épaules */}
-          <mesh castShadow position={[0, 0.5, 0]} material={cloak}>
-            <sphereGeometry args={[0.24, 12, 10]} />
+          {/* épaules douces */}
+          <mesh castShadow position={[0, 0.52, 0]} material={cloakPlain} scale={[1, 0.8, 0.9]}>
+            <sphereGeometry args={[0.23, 16, 12]} />
           </mesh>
-          {/* tête + capuche + visage lumineux */}
-          <group ref={set('head')} position={[0, 0.78, 0]}>
-            <mesh castShadow material={cloak}>
-              <sphereGeometry args={[0.19, 14, 12]} />
+          {/* liseré d'or au col */}
+          <mesh position={[0, 0.62, 0]} material={trim}>
+            <torusGeometry args={[0.14, 0.025, 8, 18]} />
+          </mesh>
+          {/* tête et capuche effilée vers l'arrière */}
+          <group ref={set('head')} position={[0, 0.8, 0]}>
+            <mesh castShadow material={cloakPlain} scale={[0.92, 1, 1.05]}>
+              <sphereGeometry args={[0.185, 18, 14]} />
             </mesh>
-            {/* pointe de capuche */}
-            <mesh position={[0, 0.16, -0.1]} rotation={[-0.6, 0, 0]} material={cloak}>
-              <coneGeometry args={[0.12, 0.3, 10]} />
+            <mesh castShadow position={[0, 0.1, -0.16]} rotation={[-1.15, 0, 0]} material={cloakPlain}>
+              <coneGeometry args={[0.115, 0.36, 12]} />
             </mesh>
-            {/* visage sombre */}
-            <mesh position={[0, -0.01, 0.13]} rotation={[0, 0, 0]} material={faceDark}>
-              <sphereGeometry args={[0.12, 10, 8]} />
+            {/* visage d'ombre */}
+            <mesh position={[0, -0.01, 0.115]} scale={[0.82, 1, 0.62]} material={faceDark}>
+              <sphereGeometry args={[0.125, 14, 10]} />
             </mesh>
-            {/* yeux lumineux */}
-            <mesh position={[-0.05, 0.01, 0.22]} material={eyes}>
-              <sphereGeometry args={[0.022, 6, 6]} />
+            {/* deux yeux de lumière */}
+            <mesh position={[-0.048, 0.015, 0.21]} scale={[1, 1.5, 0.6]} material={eyes}>
+              <sphereGeometry args={[0.02, 8, 8]} />
             </mesh>
-            <mesh position={[0.05, 0.01, 0.22]} material={eyes}>
-              <sphereGeometry args={[0.022, 6, 6]} />
+            <mesh position={[0.048, 0.015, 0.21]} scale={[1, 1.5, 0.6]} material={eyes}>
+              <sphereGeometry args={[0.02, 8, 8]} />
             </mesh>
           </group>
-          {/* écharpe : segments chaînés dans le dos */}
-          <group position={[0, 0.62, -0.16]}>
-            <group ref={set('scarf0')}>
-              <mesh geometry={scarfGeo} material={scarfMat} position={[0, 0, -0.13]} />
-              <group position={[0, 0, -0.26]}>
-                <group ref={set('scarf1')}>
-                  <mesh geometry={scarfGeo} material={scarfMat} position={[0, 0, -0.13]} />
-                  <group position={[0, 0, -0.26]}>
-                    <group ref={set('scarf2')}>
-                      <mesh geometry={scarfGeo} material={scarfMat} position={[0, 0, -0.13]} />
-                      <group position={[0, 0, -0.26]}>
-                        <group ref={set('scarf3')}>
-                          <mesh geometry={scarfGeo} material={scarfMat} position={[0, 0, -0.11]} scale={[0.75, 1, 0.9]} />
-                        </group>
-                      </group>
-                    </group>
-                  </group>
-                </group>
-              </group>
+          {/* longue écharpe */}
+          <group position={[0, 0.6, -0.15]}>{scarfChain(0)}</group>
+          {/* bras (manches puis avant-bras sombres) */}
+          <group ref={set('armL')} position={[-0.25, 0.46, 0]}>
+            <mesh castShadow position={[0, -0.16, 0]} geometry={upperGeo} material={cloakPlain} />
+            <group ref={set('elbL')} position={[0, -0.33, 0]}>
+              <mesh castShadow position={[0, -0.13, 0]} geometry={lowerGeo} material={limb} />
             </group>
           </group>
-          {/* bras articulés (épaule → coude) */}
-          <group ref={set('armL')} position={[-0.27, 0.44, 0]}>
-            <mesh castShadow position={[0, -0.17, 0]} geometry={upperGeo} material={cloak} />
-            <group ref={set('elbL')} position={[0, -0.34, 0]}>
-              <mesh castShadow position={[0, -0.14, 0]} geometry={lowerGeo} material={limb} />
+          <group ref={set('armR')} position={[0.25, 0.46, 0]}>
+            <mesh castShadow position={[0, -0.16, 0]} geometry={upperGeo} material={cloakPlain} />
+            <group ref={set('elbR')} position={[0, -0.33, 0]}>
+              <mesh castShadow position={[0, -0.13, 0]} geometry={lowerGeo} material={limb} />
             </group>
           </group>
-          <group ref={set('armR')} position={[0.27, 0.44, 0]}>
-            <mesh castShadow position={[0, -0.17, 0]} geometry={upperGeo} material={cloak} />
-            <group ref={set('elbR')} position={[0, -0.34, 0]}>
-              <mesh castShadow position={[0, -0.14, 0]} geometry={lowerGeo} material={limb} />
-            </group>
-          </group>
-          {/* jambes articulées (hanche → genou) + pieds */}
-          <group ref={set('thighL')} position={[-0.11, -0.32, 0]}>
-            <mesh castShadow position={[0, -0.16, 0]} geometry={upperGeo} material={limb} />
-            <group ref={set('shinL')} position={[0, -0.32, 0]}>
-              <mesh castShadow position={[0, -0.14, 0]} geometry={lowerGeo} material={limb} />
-              <mesh castShadow position={[0, -0.28, 0.04]} material={limb}>
-                <boxGeometry args={[0.11, 0.06, 0.2]} />
+          {/* jambes fines, pieds arrondis */}
+          <group ref={set('thighL')} position={[-0.1, -0.34, 0]}>
+            <mesh castShadow position={[0, -0.15, 0]} geometry={upperGeo} material={limb} />
+            <group ref={set('shinL')} position={[0, -0.31, 0]}>
+              <mesh castShadow position={[0, -0.13, 0]} geometry={lowerGeo} material={limb} />
+              <mesh castShadow position={[0, -0.27, 0.045]} scale={[1, 0.6, 1.5]} material={limb}>
+                <sphereGeometry args={[0.065, 10, 8]} />
               </mesh>
             </group>
           </group>
-          <group ref={set('thighR')} position={[0.11, -0.32, 0]}>
-            <mesh castShadow position={[0, -0.16, 0]} geometry={upperGeo} material={limb} />
-            <group ref={set('shinR')} position={[0, -0.32, 0]}>
-              <mesh castShadow position={[0, -0.14, 0]} geometry={lowerGeo} material={limb} />
-              <mesh castShadow position={[0, -0.28, 0.04]} material={limb}>
-                <boxGeometry args={[0.11, 0.06, 0.2]} />
+          <group ref={set('thighR')} position={[0.1, -0.34, 0]}>
+            <mesh castShadow position={[0, -0.15, 0]} geometry={upperGeo} material={limb} />
+            <group ref={set('shinR')} position={[0, -0.31, 0]}>
+              <mesh castShadow position={[0, -0.13, 0]} geometry={lowerGeo} material={limb} />
+              <mesh castShadow position={[0, -0.27, 0.045]} scale={[1, 0.6, 1.5]} material={limb}>
+                <sphereGeometry args={[0.065, 10, 8]} />
               </mesh>
             </group>
           </group>

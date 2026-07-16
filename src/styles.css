@@ -138,6 +138,18 @@ canvas {
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
 }
 
+.hud .altitude {
+  position: absolute;
+  top: 24px;
+  left: 28px;
+  font-size: 0.95rem;
+  font-weight: 300;
+  letter-spacing: 0.16em;
+  color: rgba(245, 238, 222, 0.85);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+}
+
 .hud .gauges {
   position: absolute;
   bottom: 26px;

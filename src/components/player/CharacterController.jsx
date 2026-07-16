@@ -6,17 +6,14 @@ import { input } from '../../utils/input';
 import { runtime } from '../../store/runtime';
 import { useGame } from '../../store/gameStore';
 import { audio } from '../../audio/AudioSystem';
-import { findLadder, findBouncer } from '../../level/ladders';
+import { findLadder, findBouncer, bumpers } from '../../level/ladders';
 import {
   WALK_SPEED,
   SPRINT_SPEED,
   JUMP_VELOCITY,
   CLIMB_SPEED,
   SLOWMO_SCALE,
-  SLOWMO_DRAIN,
-  SLOWMO_REGEN,
   START_POS,
-  LOW_GRAVITY_Y,
   biomeAt,
 } from '../../constants';
 import { PlayerModel } from './PlayerModel';
@@ -53,6 +50,7 @@ export function CharacterController() {
     ladder: null,
     coyote: 0,
     jumpBuf: 0,
+    bumpCd: 0, // anti-spam des bumpers
     ladderCooldown: 0, // délai avant ré-accroche après un saut d'échelle
     mantleT: 0,
     mantlePhase: 0, // 0 = montée, 1 = bascule vers l'avant
@@ -115,13 +113,12 @@ export function CharacterController() {
 
     const dt = Math.min(rawDelta, 1 / 30);
 
-    // --- Slow motion ---
-    const wantSlow = input.slow && runtime.slowmo > 0.02;
+    // --- Slow motion (libre, sans jauge : un outil de précision) ---
+    const wantSlow = input.slow;
     runtime.targetTimeScale = wantSlow ? SLOWMO_SCALE : 1;
     runtime.timeScale += (runtime.targetTimeScale - runtime.timeScale) * Math.min(1, dt * 10);
     runtime.slowmoActive = wantSlow;
     audio.setSlow(wantSlow);
-    if (wantSlow) runtime.slowmo = Math.max(0, runtime.slowmo - dt * SLOWMO_DRAIN);
 
     const sdt = dt * runtime.timeScale;
 
@@ -182,6 +179,7 @@ export function CharacterController() {
     if (jumpPressed) s.jumpBuf = 0.12;
     else s.jumpBuf = Math.max(0, s.jumpBuf - sdt);
     s.ladderCooldown = Math.max(0, s.ladderCooldown - sdt);
+    s.bumpCd = Math.max(0, s.bumpCd - sdt);
     s.coyote = grounded ? 0.12 : Math.max(0, s.coyote - sdt);
 
     // ======================= MACHINE À ÉTATS =======================
@@ -210,11 +208,16 @@ export function CharacterController() {
         s.ladder = null;
         runtime.climbDir = 0;
       } else if (fAmt > 0 && _pos.y >= l.y1 - 0.25) {
-        // sommet : rétablissement automatique par-dessus
+        // sommet : cherche la VRAIE surface d'arrivée derrière l'échelle
+        // (certaines échelles finissent un peu sous leur plateforme)
+        const ox = _pos.x - l.nx * 0.9;
+        const oz = _pos.z - l.nz * 0.9;
+        const top = cast(ox, l.y1 + 2.6, oz, 0, -1, 0, 4.5);
+        const topHit = top && top.normal.y > 0.5 ? l.y1 + 2.6 - toi(top) : l.y1;
         s.mode = 'mantle';
         s.mantleT = 0;
         s.mantlePhase = 0;
-        s.mantleTargetY = l.y1 + 1.05;
+        s.mantleTargetY = Math.max(topHit, l.y1) + 1.1;
         s.mantleDir.set(-l.nx, 0, -l.nz);
         s.ladder = null;
         runtime.climbDir = 0;
@@ -239,7 +242,6 @@ export function CharacterController() {
         body.current.setLinvel(_vel, true);
         s.faceYaw = dampAngle(s.faceYaw, Math.atan2(-l.nx, -l.nz), 16, sdt);
         runtime.climbDir = fAmt;
-        runtime.slowmo = Math.min(1, runtime.slowmo + dt * SLOWMO_REGEN * (wantSlow ? 0 : 1));
         if (fAmt !== 0) {
           s.stepAcc += CLIMB_SPEED * sdt;
           if (s.stepAcc > 1.3) {
@@ -254,7 +256,7 @@ export function CharacterController() {
       if (s.mantlePhase === 0) {
         // montée verticale jusqu'à dépasser le rebord
         body.current.setLinvel({ x: 0, y: 7, z: 0 }, true);
-        if (_pos.y >= s.mantleTargetY || s.mantleT > 0.7) {
+        if (_pos.y >= s.mantleTargetY || s.mantleT > 0.9) {
           s.mantlePhase = 1;
           s.mantleT = 0;
         }
@@ -329,9 +331,34 @@ export function CharacterController() {
         }
       }
 
+      // Bumpers : sphères qui repoussent (champignons, boules de neige, boosters)
+      if (s.mode === 'move' && s.bumpCd <= 0) {
+        for (const bp of bumpers) {
+          const dx = _pos.x - bp.x;
+          const dy = _pos.y - bp.y;
+          const dz = _pos.z - bp.z;
+          const rr = bp.r + 0.7;
+          if (dx * dx + dy * dy + dz * dz < rr * rr) {
+            const len = Math.max(0.001, Math.hypot(dx, dy, dz));
+            _vel.set(
+              (dx / len) * bp.power,
+              Math.max((dy / len) * bp.power, bp.power * 0.55),
+              (dz / len) * bp.power
+            );
+            body.current.setLinvel(_vel, true);
+            s.bumpCd = 0.35;
+            runtime.bouncedAt = runtime.simTime;
+            audio.sfx('bounce');
+            break;
+          }
+        }
+      }
+
       if (s.mode === 'move') {
         const targetSpeed = input.sprint && grounded ? SPRINT_SPEED : WALK_SPEED;
-        const accel = grounded ? 11 : 3.5;
+        // sur la glace, on n'a presque plus d'adhérence : ça glisse
+        const onIce = !!(groundHit && groundHit.collider?.parent()?.userData?.ice);
+        const accel = grounded ? (onIce ? 1.6 : 11) : 3.5;
         _wish.multiplyScalar(targetSpeed);
         _vel.x = THREE.MathUtils.damp(_vel.x, _wish.x, accel, sdt);
         _vel.z = THREE.MathUtils.damp(_vel.z, _wish.z, accel, sdt);
@@ -364,7 +391,8 @@ export function CharacterController() {
         if (_vel.y < -34) _vel.y = -34;
 
         body.current.setLinvel(_vel, true);
-        body.current.setGravityScale(_pos.y > LOW_GRAVITY_Y ? 0.55 : 1, true);
+        // gravité par chapitre (l'espace flotte, le paradis allège)
+        body.current.setGravityScale(biomeAt(_pos.y).gravity, true);
 
         const hSpeed = Math.hypot(_vel.x, _vel.z);
         if (hSpeed > 0.8 && _wish.lengthSq() > 0.01) {
@@ -377,10 +405,6 @@ export function CharacterController() {
             s.stepAcc = 0;
             audio.sfx('step');
           }
-        }
-
-        if (grounded && !wantSlow) {
-          runtime.slowmo = Math.min(1, runtime.slowmo + dt * SLOWMO_REGEN);
         }
       }
     }
@@ -399,11 +423,14 @@ export function CharacterController() {
 
     const biome = biomeAt(_pos.y);
     if (biome.name !== runtime.biome) {
-      const order = ['bedroom', 'school', 'office', 'paradise'];
+      const order = ['bedroom', 'jungle', 'ice', 'school', 'office', 'space', 'paradise'];
       const labels = {
         bedroom: 'La Chambre',
+        jungle: 'La Jungle',
+        ice: 'La Glace',
         school: "L'École",
         office: 'Le Bureau',
+        space: "L'Espace",
         paradise: 'Le Paradis',
       };
       const leaving = runtime.biome;
