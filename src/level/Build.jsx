@@ -8,15 +8,22 @@ import { MODELS } from '../utils/assets';
 // Le gameplay repose sur des colliders boîtes fiables ; les modèles Synty
 // ne sont que l'habillage visuel par-dessus (approche robuste et perf).
 
-// mesure (une fois) la boîte englobante d'un modèle dans ses unités propres
+// mesure (une fois) la boîte englobante d'un modèle dans ses unités propres.
+// IMPORTANT : les modèles Synty ont souvent leur pivot décalé (coin, hors
+// centre). On expose donc le CENTRE de la boîte pour recentrer proprement
+// modèle + collider — sinon les colliders atterrissent au mauvais endroit
+// et emmurent le joueur.
 function useBounds(url) {
   const { scene } = useGLTF(url);
   return useMemo(() => {
     const b = new THREE.Box3().setFromObject(scene);
     const size = new THREE.Vector3();
-    const min = b.min.clone();
+    const center = new THREE.Vector3();
     b.getSize(size);
-    return { scene, size, min };
+    b.getCenter(center);
+    // décalage pour recentrer horizontalement (x,z) et poser les pieds à y=0
+    const offset = new THREE.Vector3(-center.x, -b.min.y, -center.z);
+    return { scene, size, min: b.min.clone(), center, offset };
   }, [scene]);
 }
 
@@ -27,10 +34,10 @@ export function Plat({ pos, size = [8, 8], model = 'floorWood', thick = 1.2, til
   const { scene, size: bs, min } = useBounds(MODELS[model]);
   const [w, d] = size;
 
-  // grille de tuiles pour éviter d'étirer la texture
+  // grille de tuiles pour éviter d'étirer la texture (bornée pour la perf)
   const tiles = useMemo(() => {
-    const nx = Math.max(1, Math.round(w / tile));
-    const nz = Math.max(1, Math.round(d / tile));
+    const nx = Math.min(3, Math.max(1, Math.round(w / tile)));
+    const nz = Math.min(3, Math.max(1, Math.round(d / tile)));
     const tw = w / nx;
     const td = d / nz;
     const sx = tw / (bs.x || 2);
@@ -60,18 +67,23 @@ export function Plat({ pos, size = [8, 8], model = 'floorWood', thick = 1.2, til
 // ------------------------------------------------------- Objet solide
 // Modèle avec collider boîte automatique (bâtiment, rocher, caisse...).
 // pos = point d'appui au SOL du modèle.
-export function Solid({ pos, model, scale = 1, rot = 0, collider, climbTop = false }) {
-  const { scene, size, min } = useBounds(MODELS[model]);
+export function Solid({ pos, model, scale = 1, rot = 0, collider }) {
+  const { scene, size, offset } = useBounds(MODELS[model]);
   const s = Array.isArray(scale) ? scale : [scale, scale, scale];
   const half = collider || [(size.x * s[0]) / 2, (size.y * s[1]) / 2, (size.z * s[2]) / 2];
-  // le modèle est posé pieds au sol : on remonte de -min.y*scale
-  const lift = -min.y * s[1];
+  // modèle recentré en x/z, pieds à y=0 → collider centré et bien placé
   return (
     <group position={pos} rotation={[0, rot, 0]}>
       <RigidBody type="fixed" colliders={false}>
         <CuboidCollider args={half} position={[0, half[1], 0]} friction={0.9} />
       </RigidBody>
-      <Clone object={scene} position={[0, lift, 0]} scale={s} castShadow receiveShadow />
+      <Clone
+        object={scene}
+        position={[offset.x * s[0], offset.y * s[1], offset.z * s[2]]}
+        scale={s}
+        castShadow
+        receiveShadow
+      />
     </group>
   );
 }
@@ -79,11 +91,17 @@ export function Solid({ pos, model, scale = 1, rot = 0, collider, climbTop = fal
 // ------------------------------------------------------- Décoration
 // Modèle sans collision (arbres, buissons, herbe, vignes, lampes).
 export function Deco({ pos, model, scale = 1, rot = 0, tilt = 0 }) {
-  const { scene, min } = useBounds(MODELS[model]);
+  const { scene, offset } = useBounds(MODELS[model]);
   const s = Array.isArray(scale) ? scale : [scale, scale, scale];
   return (
     <group position={pos} rotation={[tilt, rot, 0]}>
-      <Clone object={scene} position={[0, -min.y * s[1], 0]} scale={s} castShadow receiveShadow />
+      <Clone
+        object={scene}
+        position={[offset.x * s[0], offset.y * s[1], offset.z * s[2]]}
+        scale={s}
+        castShadow={false}
+        receiveShadow={false}
+      />
     </group>
   );
 }

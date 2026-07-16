@@ -21,7 +21,9 @@ export default function App() {
     initInput();
 
     // Échap (sortie du pointer lock) pendant le jeu → pause
+    // (désactivé sous automation headless pour les tests)
     const onLockChange = () => {
+      if (navigator.webdriver) return;
       if (!document.pointerLockElement && useGame.getState().phase === 'playing') {
         useGame.getState().pause();
       }

@@ -23,7 +23,7 @@ export function Character() {
   const root = useRef();
 
   // clone (plusieurs instances possibles) + ombres + collecte des os
-  const { model, bones, offsetY, scale } = useMemo(() => {
+  const { model, bones, prim, scale } = useMemo(() => {
     const m = scene.clone(true);
     const bones = {};
     m.traverse((o) => {
@@ -33,16 +33,19 @@ export function Character() {
       }
       if (o.isBone) bones[o.name] = o;
     });
-    // mise à l'échelle : ~1.85 u de haut, pieds au bas de la capsule (-0.95)
+    // mise à l'échelle : ~1.85 u de haut
     const box = new THREE.Box3().setFromObject(m);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
     const h = box.max.y - box.min.y || 1.8;
-    const scale = 1.85 / h;
-    const offsetY = -0.95 - box.min.y * scale;
-    // mémorise la pose de repos
+    const scale = 1.8 / h;
+    // recentre en x/z et pose les pieds pile au bas de la capsule (-0.95)
+    // (en unités modèle, avant l'échelle appliquée par le groupe racine)
+    const prim = [-center.x, -box.min.y - 0.95 / scale, -center.z];
     Object.values(bones).forEach((b) => {
       b.userData.rest = b.quaternion.clone();
     });
-    return { model: m, bones, offsetY, scale };
+    return { model: m, bones, prim, scale };
   }, [scene]);
 
   // état d'animation persistant
@@ -160,8 +163,8 @@ export function Character() {
   }, -1);
 
   return (
-    <group ref={root} position={[0, offsetY, 0]} scale={scale}>
-      <primitive object={model} />
+    <group ref={root} scale={scale}>
+      <primitive object={model} position={prim} />
     </group>
   );
 }
