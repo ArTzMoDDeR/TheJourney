@@ -71,7 +71,8 @@ export function Solid({ pos, model, scale = 1, rot = 0, collider }) {
   const { scene, size, offset } = useBounds(MODELS[model]);
   const s = Array.isArray(scale) ? scale : [scale, scale, scale];
   const half = collider || [(size.x * s[0]) / 2, (size.y * s[1]) / 2, (size.z * s[2]) / 2];
-  // modèle recentré en x/z, pieds à y=0 → collider centré et bien placé
+  // les gros décors (bâtiments, gros rochers) ne projettent pas d'ombre (perf)
+  const shadow = Math.max(s[0], s[1], s[2]) < 3.5;
   return (
     <group position={pos} rotation={[0, rot, 0]}>
       <RigidBody type="fixed" colliders={false}>
@@ -81,7 +82,7 @@ export function Solid({ pos, model, scale = 1, rot = 0, collider }) {
         object={scene}
         position={[offset.x * s[0], offset.y * s[1], offset.z * s[2]]}
         scale={s}
-        castShadow
+        castShadow={shadow}
         receiveShadow
       />
     </group>

@@ -18,7 +18,8 @@ const _offset = new THREE.Vector3();
 const _desired = new THREE.Vector3();
 const _dir = new THREE.Vector3();
 
-const BASE_DIST = 5.4;
+const BASE_DIST = 6.2;
+const MIN_DIST = 3.2; // jamais plus près : on reste en 3e personne
 const BASE_FOV = 62;
 
 function dampAngle(a, b, lambda, dt) {
@@ -115,9 +116,12 @@ export function CameraRig() {
     const hit = world.castRay(r, BASE_DIST + 0.3, true, FLAGS, undefined, undefined, body || undefined);
     if (hit) {
       const toi = hit.timeOfImpact ?? hit.toi;
-      dist = Math.max(1.1, toi - 0.25);
+      // on n'approche la caméra que pour un VRAI obstacle entre elle et le
+      // joueur ; on ignore les impacts trop proches (rayon parti dans un
+      // collider) et on ne descend jamais sous MIN_DIST → toujours 3e personne
+      if (toi > MIN_DIST) dist = Math.max(MIN_DIST, toi - 0.3);
     }
-    s.dist = THREE.MathUtils.damp(s.dist, dist, dist < s.dist ? 30 : 6, dt);
+    s.dist = THREE.MathUtils.damp(s.dist, dist, dist < s.dist ? 24 : 6, dt);
 
     _desired.copy(s.smoothTarget).addScaledVector(_offset, s.dist);
     camera.position.copy(_desired);

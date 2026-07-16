@@ -18,10 +18,10 @@ export function Effects() {
   });
 
   return (
-    <EffectComposer disableNormalPass multisampling={2}>
-      <Bloom luminanceThreshold={1.0} intensity={0.7} mipmapBlur radius={0.7} />
+    <EffectComposer disableNormalPass multisampling={0}>
+      <Bloom luminanceThreshold={1.0} intensity={0.55} mipmapBlur radius={0.6} />
       <ChromaticAberration offset={offsetVec} />
-      <Vignette eskil={false} offset={0.22} darkness={0.72} />
+      <Vignette eskil={false} offset={0.24} darkness={0.68} />
     </EffectComposer>
   );
 }
