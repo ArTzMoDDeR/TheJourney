@@ -295,8 +295,7 @@ export function OfficeWorld() {
           le courant nous cueille et nous dépose sur l'île du paradis. */}
       <WindColumn pos={[-14, 202, -44]} height={36} radius={2.6} />
 
-      {/* ------------------------------------------------ l'arrivée : la porte du chapitre */}
-      <Gate pos={[-14, 236, -14]} killY={190} label="Le Paradis" beaconHeight={40} />
+      {/* (le courant mène à l'espace — sa porte est posée sur l'astéroïde d'accueil) */}
     </group>
   );
 }

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { M, legoMats, bookMats, bookCoverMats, crayonMats } from '../components/level/materials';
-import { B, Cyl, Ladder, Trampoline, Gate, Souvenir, isPlayer } from '../level/kit';
+import { B, Cyl, Ladder, Trampoline, Souvenir, StairsRun, Ramp, isPlayer } from '../level/kit';
 import { drawingTexture, letterTexture, clockTexture } from '../utils/textures';
 import { mulberry32 } from '../utils/rng';
 import { runtime } from '../store/runtime';
@@ -229,13 +229,13 @@ export function BedroomWorld() {
 
       {/* ------------------------------------------------ les murs (papier peint) */}
       {/* nord, avec la fenêtre découpée (x -10..14, y 58..70) */}
-      <B pos={[-42.5, 35, -75]} size={[65, 70, 2]} mat={M.wallBedroom} shadow={false} />
-      <B pos={[44.5, 35, -75]} size={[61, 70, 2]} mat={M.wallBedroom} shadow={false} />
+      <B pos={[-42.5, 37, -75]} size={[65, 74, 2]} mat={M.wallBedroom} shadow={false} />
+      <B pos={[44.5, 37, -75]} size={[61, 74, 2]} mat={M.wallBedroom} shadow={false} />
       <B pos={[2, 29, -75]} size={[24, 58, 2]} mat={M.wallBedroom} shadow={false} />
       {/* sud, est, ouest */}
-      <B pos={[0, 35, 75]} size={[150, 70, 2]} mat={M.wallBedroom} shadow={false} />
-      <B pos={[75, 35, 0]} size={[2, 70, 150]} mat={M.wallBedroom} shadow={false} />
-      <B pos={[-75, 35, 0]} size={[2, 70, 150]} mat={M.wallBedroom} shadow={false} />
+      <B pos={[0, 37, 75]} size={[150, 74, 2]} mat={M.wallBedroom} shadow={false} />
+      <B pos={[75, 37, 0]} size={[2, 74, 150]} mat={M.wallBedroom} shadow={false} />
+      <B pos={[-75, 37, 0]} size={[2, 74, 150]} mat={M.wallBedroom} shadow={false} />
       {/* plinthes */}
       {[
         [0, 1.5, -73.8, 148, 3, 0.6],
@@ -518,8 +518,10 @@ export function BedroomWorld() {
       <pointLight position={[20, 5, 30]} color="#ffc98d" intensity={45} distance={50} decay={1.9} />
       <Cyl pos={[24, 1.5, 34]} r={1.4} h={3} rTop={0.8} mat={M.knob} />
 
-      {/* ------------------------------------------------ sortie du chapitre */}
-      <Gate pos={[3, 74.5, -79]} killY={30} label="L'École" beaconHeight={50} />
+      {/* marches de livres et planche : on grimpe aussi à pied */}
+      <StairsRun pos={[-2, 0, 44]} yaw={0} steps={7} stepW={4} stepH={0.6} stepD={1.2} mat={M.woodDark} />
+      <Ramp pos={[-38, 3.2, -16]} size={[4, 0.7, 13]} pitch={0.42} mat={M.wood} />
+      {/* (la porte du chapitre suivant est posée dans la jungle, au-dessus) */}
     </group>
   );
 }

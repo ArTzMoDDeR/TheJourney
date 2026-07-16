@@ -1,12 +1,27 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier';
+import { RigidBody, CuboidCollider, CylinderCollider, BallCollider } from '@react-three/rapier';
 import { M } from '../components/level/materials';
-import { registerLadder, registerBouncer } from './ladders';
+import { registerLadder, registerBouncer, registerBumper } from './ladders';
 import { runtime } from '../store/runtime';
 import { useGame } from '../store/gameStore';
 import { audio } from '../audio/AudioSystem';
+
+// ---------------------------------------------------------- WorldShift
+// Décale un chapitre entier en altitude : le rendu et les colliders
+// suivent le <group>, et les composants à registre (échelles, trampolines,
+// bumpers, portes, ascenseurs) lisent ce contexte pour convertir leurs
+// coordonnées locales en coordonnées monde.
+const OffsetCtx = createContext(0);
+
+export function WorldShift({ y, children }) {
+  return (
+    <OffsetCtx.Provider value={y}>
+      <group position={[0, y, 0]}>{children}</group>
+    </OffsetCtx.Provider>
+  );
+}
 
 // ============================================================ KIT DE JEU
 // Briques de gameplay partagées par les quatre mondes :
@@ -18,16 +33,78 @@ export const isPlayer = (other) => !!other.rigidBody?.userData?.player;
 
 // ------------------------------------------------------------ Boîte solide
 // L'atome du level design : mesh + collider exacts.
-export function B({ pos, size, rot = 0, mat = M.wood, shadow = true, visible = true }) {
+// ice : surface glissante (le contrôleur réduit l'adhérence dessus).
+export function B({ pos, size, rot = 0, mat = M.wood, shadow = true, visible = true, ice = false }) {
   return (
-    <RigidBody type="fixed" colliders={false} position={pos} rotation={[0, rot, 0]}>
-      <CuboidCollider args={[size[0] / 2, size[1] / 2, size[2] / 2]} friction={0.9} />
+    <RigidBody
+      type="fixed"
+      colliders={false}
+      position={pos}
+      rotation={[0, rot, 0]}
+      userData={ice ? { ice: true } : undefined}
+    >
+      <CuboidCollider args={[size[0] / 2, size[1] / 2, size[2] / 2]} friction={ice ? 0.05 : 0.9} />
       {visible && (
         <mesh castShadow={shadow} receiveShadow material={mat}>
           <boxGeometry args={size} />
         </mesh>
       )}
     </RigidBody>
+  );
+}
+
+// -------------------------------------------------------------- Rampe
+// Plan incliné praticable à pied (pitch en radians, autour de X local).
+export function Ramp({ pos, size, pitch = 0.4, yaw = 0, mat = M.wood, ice = false, shadow = true }) {
+  return (
+    <RigidBody
+      type="fixed"
+      colliders={false}
+      position={pos}
+      rotation={[pitch, yaw, 0]}
+      userData={ice ? { ice: true } : undefined}
+    >
+      <CuboidCollider args={[size[0] / 2, size[1] / 2, size[2] / 2]} friction={ice ? 0.05 : 1} />
+      <mesh castShadow={shadow} receiveShadow material={mat}>
+        <boxGeometry args={size} />
+      </mesh>
+    </RigidBody>
+  );
+}
+
+// -------------------------------------------------------------- Bumper
+// Sphère qui repousse : champignon de jungle, boule de neige, booster…
+export function Bumper({ pos, r = 1.6, power = 16, mat = M.legoRed, children }) {
+  const off = useContext(OffsetCtx);
+  const visual = useRef();
+
+  useEffect(
+    () => registerBumper({ x: pos[0], y: pos[1] + off, z: pos[2], r, power }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  useFrame(() => {
+    if (!visual.current) return;
+    const e = runtime.simTime - runtime.bouncedAt;
+    const d = runtime.playerPos.distanceTo(
+      new THREE.Vector3(pos[0], pos[1] + off, pos[2])
+    );
+    const squash = d < r + 3 && e >= 0 && e < 0.3 ? 1 - Math.sin((e / 0.3) * Math.PI) * 0.25 : 1;
+    visual.current.scale.setScalar(2 - squash - (1 - squash) * 0.5);
+    visual.current.scale.y = squash;
+  });
+
+  return (
+    <group position={pos}>
+      <group ref={visual}>
+        {children || (
+          <mesh castShadow material={mat}>
+            <sphereGeometry args={[r, 16, 12]} />
+          </mesh>
+        )}
+      </group>
+    </group>
   );
 }
 
@@ -47,6 +124,7 @@ export function Cyl({ pos, r, h, rot = 0, mat = M.wood, shadow = true, rTop }) {
 // LE moyen de grimper. pos = pied de la face d'escalade, yaw = orientation
 // de la normale (0 → face vers +z). styles : wood, metal, gym, rope, light.
 export function Ladder({ pos, height, yaw = 0, width = 1.1, style = 'wood' }) {
+  const off = useContext(OffsetCtx);
   const nx = Math.sin(yaw);
   const nz = Math.cos(yaw);
 
@@ -55,8 +133,8 @@ export function Ladder({ pos, height, yaw = 0, width = 1.1, style = 'wood' }) {
       registerLadder({
         cx: pos[0],
         cz: pos[2],
-        y0: pos[1],
-        y1: pos[1] + height,
+        y0: pos[1] + off,
+        y1: pos[1] + off + height,
         nx,
         nz,
         halfW: width / 2,
@@ -99,6 +177,7 @@ export function Ladder({ pos, height, yaw = 0, width = 1.1, style = 'wood' }) {
 // Rebond puissant : raccourci qui fait gagner du temps. La zone est
 // enregistrée dans un registre lu par le contrôleur (raycast de sol).
 export function Trampoline({ pos, size = [4, 1, 4], power = 19, mat = M.mattress, children }) {
+  const off = useContext(OffsetCtx);
   const visual = useRef();
 
   useEffect(
@@ -108,7 +187,7 @@ export function Trampoline({ pos, size = [4, 1, 4], power = 19, mat = M.mattress
         cz: pos[2],
         halfW: size[0] / 2,
         halfD: size[2] / 2,
-        topY: pos[1] + size[1] / 2,
+        topY: pos[1] + off + size[1] / 2,
         power,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,7 +201,7 @@ export function Trampoline({ pos, size = [4, 1, 4], power = 19, mat = M.mattress
     const near =
       Math.abs(runtime.playerPos.x - pos[0]) < size[0] / 2 + 2 &&
       Math.abs(runtime.playerPos.z - pos[2]) < size[2] / 2 + 2 &&
-      Math.abs(runtime.playerPos.y - pos[1]) < 6;
+      Math.abs(runtime.playerPos.y - (pos[1] + off)) < 6;
     const squash = near && e >= 0 && e < 0.35 ? 1 - Math.sin((e / 0.35) * Math.PI) * 0.35 : 1;
     visual.current.scale.set(2 - squash, squash, 2 - squash);
   });
@@ -144,9 +223,10 @@ export function Trampoline({ pos, size = [4, 1, 4], power = 19, mat = M.mattress
 // -------------------------------------------------------------- Ascenseur
 // Plateforme cinématique entre deux points, avec pause aux extrémités.
 export function Elevator({ from, to, size = [3.6, 0.5, 3.6], period = 6, dwell = 1.6, mat = M.metal, phase = 0, children }) {
+  const off = useContext(OffsetCtx);
   const body = useRef();
-  const a = useMemo(() => new THREE.Vector3(...from), [from]);
-  const b = useMemo(() => new THREE.Vector3(...to), [to]);
+  const a = useMemo(() => new THREE.Vector3(from[0], from[1] + off, from[2]), [from, off]);
+  const b = useMemo(() => new THREE.Vector3(to[0], to[1] + off, to[2]), [to, off]);
 
   useFrame(() => {
     if (!body.current) return;
@@ -282,6 +362,7 @@ export function CloudPuff({ pos, r = 2.2, dissolve = false }) {
 // Le SEUL endroit où le checkpoint avance (demande explicite du design).
 // Le faisceau de lumière sert de repère : lever les yeux montre le chemin.
 export function Gate({ pos, killY, beaconHeight = 60, label }) {
+  const off = useContext(OffsetCtx);
   const beam = useRef();
 
   useFrame(() => {
@@ -300,7 +381,7 @@ export function Gate({ pos, killY, beaconHeight = 60, label }) {
             if (!isPlayer(e)) return;
             const g = useGame.getState();
             const before = g.checkpoint;
-            g.setCheckpoint({ pos: [pos[0], pos[1] + 1, pos[2]], killY, label });
+            g.setCheckpoint({ pos: [pos[0], pos[1] + off + 1, pos[2]], killY: killY + off, label });
             if (useGame.getState().checkpoint !== before) audio.sfx('checkpoint');
           }}
         />

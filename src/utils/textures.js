@@ -501,6 +501,198 @@ export function drawingTexture(kind) {
   });
 }
 
+// ---------------------------------------------------------------- ÉCORCE
+export function barkTexture() {
+  return make(128, 256, (ctx, w, h) => {
+    const r = rngOf(41);
+    ctx.fillStyle = '#5a4230';
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 34; i++) {
+      ctx.strokeStyle = `rgba(30,18,8,${0.25 + r() * 0.3})`;
+      ctx.lineWidth = 2 + r() * 4;
+      ctx.beginPath();
+      let x = r() * w;
+      ctx.moveTo(x, 0);
+      for (let y = 0; y <= h; y += 24) {
+        x += (r() - 0.5) * 10;
+        ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    for (let i = 0; i < 60; i++) {
+      ctx.fillStyle = `rgba(140,110,70,${r() * 0.2})`;
+      ctx.fillRect(r() * w, r() * h, 3 + r() * 8, 2 + r() * 3);
+    }
+  }, { repeat: [2, 3] });
+}
+
+// -------------------------------------------------------------- FEUILLAGE
+export function leafTexture(base = '#3f7a35', dark = '#295223') {
+  return make(128, 128, (ctx, w, h) => {
+    const r = rngOf(43);
+    ctx.fillStyle = dark;
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 260; i++) {
+      ctx.fillStyle = `rgba(${70 + r() * 60},${130 + r() * 60},${50 + r() * 40},0.55)`;
+      ctx.beginPath();
+      ctx.ellipse(r() * w, r() * h, 4 + r() * 8, 3 + r() * 5, r() * Math.PI, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = base;
+    ctx.globalAlpha = 0.15;
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalAlpha = 1;
+  }, { repeat: [2, 2] });
+}
+
+// ------------------------------------------------------------------ HERBE
+export function grassTexture() {
+  return make(128, 128, (ctx, w, h) => {
+    const r = rngOf(47);
+    ctx.fillStyle = '#4a6a34';
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 700; i++) {
+      ctx.strokeStyle = `rgba(${60 + r() * 60},${110 + r() * 70},${40 + r() * 40},0.5)`;
+      const x = r() * w;
+      const y = r() * h;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + (r() - 0.5) * 3, y - 3 - r() * 4);
+      ctx.stroke();
+    }
+  }, { repeat: [10, 10] });
+}
+
+// ---------------------------------------------------------- PIERRE MOUSSUE
+export function mossStoneTexture() {
+  return make(128, 128, (ctx, w, h) => {
+    const r = rngOf(53);
+    ctx.fillStyle = '#7a7568';
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 40; i++) {
+      ctx.fillStyle = `rgba(60,55,45,${r() * 0.3})`;
+      ctx.fillRect(r() * w, r() * h, 8 + r() * 26, 4 + r() * 10);
+    }
+    for (let i = 0; i < 26; i++) {
+      ctx.fillStyle = `rgba(70,110,50,${0.2 + r() * 0.35})`;
+      ctx.beginPath();
+      ctx.ellipse(r() * w, r() * h, 4 + r() * 12, 3 + r() * 7, r(), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(40,38,32,0.5)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, w - 2, h - 2);
+  });
+}
+
+// ------------------------------------------------------------------ GLACE
+export function iceTexture() {
+  return make(128, 128, (ctx, w, h) => {
+    const r = rngOf(59);
+    const g = ctx.createLinearGradient(0, 0, w, h);
+    g.addColorStop(0, '#bfe2f2');
+    g.addColorStop(1, '#8fc4e2');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+    // fissures
+    for (let i = 0; i < 12; i++) {
+      ctx.strokeStyle = `rgba(255,255,255,${0.25 + r() * 0.3})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      let x = r() * w;
+      let y = r() * h;
+      ctx.moveTo(x, y);
+      for (let k = 0; k < 4; k++) {
+        x += (r() - 0.5) * 40;
+        y += (r() - 0.5) * 40;
+        ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+  }, { repeat: [2, 2] });
+}
+
+// ------------------------------------------------------------------ NEIGE
+export function snowTexture() {
+  return make(128, 128, (ctx, w, h) => {
+    const r = rngOf(61);
+    ctx.fillStyle = '#eef3f8';
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 500; i++) {
+      ctx.fillStyle = `rgba(${200 + r() * 55},${210 + r() * 45},${230 + r() * 25},0.5)`;
+      ctx.fillRect(r() * w, r() * h, 2, 2);
+    }
+  }, { repeat: [6, 6] });
+}
+
+// ---------------------------------------------------------------- LA TERRE
+export function earthTexture() {
+  return make(256, 128, (ctx, w, h) => {
+    const r = rngOf(67);
+    ctx.fillStyle = '#2a5a9a';
+    ctx.fillRect(0, 0, w, h);
+    // continents
+    for (let i = 0; i < 9; i++) {
+      ctx.fillStyle = i % 3 ? '#4a7a44' : '#8a7a52';
+      const cx = r() * w;
+      const cy = r() * h;
+      for (let k = 0; k < 8; k++) {
+        ctx.beginPath();
+        ctx.ellipse(
+          cx + (r() - 0.5) * 46,
+          cy + (r() - 0.5) * 26,
+          6 + r() * 18,
+          4 + r() * 12,
+          r() * Math.PI,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+    }
+    // nuages
+    for (let i = 0; i < 40; i++) {
+      ctx.fillStyle = `rgba(255,255,255,${0.25 + r() * 0.3})`;
+      ctx.beginPath();
+      ctx.ellipse(r() * w, r() * h, 8 + r() * 18, 3 + r() * 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // calottes
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.fillRect(0, 0, w, 9);
+    ctx.fillRect(0, h - 9, w, 9);
+  });
+}
+
+// -------------------------------------------------------- TUNIQUE DU HÉROS
+export function robeTexture() {
+  return make(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#8a2f2b';
+    ctx.fillRect(0, 0, w, h);
+    // tissage subtil
+    const r = rngOf(71);
+    for (let i = 0; i < 800; i++) {
+      ctx.fillStyle = `rgba(${120 + r() * 40},${40 + r() * 20},${36 + r() * 16},0.25)`;
+      ctx.fillRect(r() * w, r() * h, 2, 2);
+    }
+    // motifs dorés en losange (bande basse, façon Journey)
+    ctx.strokeStyle = 'rgba(217,164,65,0.85)';
+    ctx.lineWidth = 3;
+    for (let x = 0; x < w + 32; x += 32) {
+      ctx.beginPath();
+      ctx.moveTo(x - 16, h - 28);
+      ctx.lineTo(x, h - 44);
+      ctx.lineTo(x + 16, h - 28);
+      ctx.lineTo(x, h - 12);
+      ctx.closePath();
+      ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(217,164,65,0.9)';
+    ctx.fillRect(0, h - 8, w, 8);
+    ctx.fillRect(0, h - 52, w, 3);
+  });
+}
+
 // ------------------------------------------------- IMMEUBLES LOINTAINS
 export function windowsTexture(seed = 21) {
   return make(64, 128, (ctx, w, h) => {

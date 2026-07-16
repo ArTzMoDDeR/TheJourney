@@ -17,6 +17,20 @@ export function registerLadder(l) {
   };
 }
 
+// ------------------------------------------------------------ Bumpers
+// Sphères qui repoussent le joueur (champignons, boules de neige,
+// boosters…) — détectées par simple distance dans le contrôleur.
+// { x, y, z, r, power }
+export const bumpers = [];
+
+export function registerBumper(b) {
+  bumpers.push(b);
+  return () => {
+    const i = bumpers.indexOf(b);
+    if (i >= 0) bumpers.splice(i, 1);
+  };
+}
+
 // ------------------------------------------------------------ Trampolines
 // Zones de rebond détectées par le contrôleur via son raycast de sol
 // (déterministe, indépendant des événements de collision).

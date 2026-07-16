@@ -12,6 +12,33 @@ const CHORDS = {
     pluckEvery: [1.2, 2.8],
     filter: 2400,
   },
+  jungle: {
+    pad: [98.0, 146.83, 196.0, 220.0], // G2 D3 G3 A3 — vivant, ouvert
+    scale: [392.0, 440.0, 493.88, 587.33, 659.25], // G pentatonique
+    pluckType: 'triangle',
+    padGain: 0.05,
+    pluckGain: 0.045,
+    pluckEvery: [0.8, 2.2], // dense : la jungle chante
+    filter: 2800,
+  },
+  ice: {
+    pad: [220.0, 329.63, 440.0], // A3 E4 A4 — cristallin, espacé
+    scale: [880.0, 987.77, 1108.73, 1318.51], // aigus de glace
+    pluckType: 'sine',
+    padGain: 0.04,
+    pluckGain: 0.04,
+    pluckEvery: [2.5, 5.5],
+    filter: 4200,
+  },
+  space: {
+    pad: [55.0, 82.41, 110.0], // A1 E2 A2 — drone profond, immense
+    scale: [440.0, 554.37, 659.25], // rares signaux
+    pluckType: 'sine',
+    padGain: 0.055,
+    pluckGain: 0.02,
+    pluckEvery: [4.0, 8.0], // le silence de l'espace
+    filter: 1200,
+  },
   school: {
     pad: [110.0, 164.81, 220.0, 246.94], // A2 E3 A3 B3 — mineur, tension légère
     scale: [440.0, 493.88, 523.25, 659.25, 698.46], // A mineur

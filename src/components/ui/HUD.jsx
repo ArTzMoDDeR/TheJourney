@@ -10,7 +10,7 @@ export function HUD() {
   const phase = useGame((s) => s.phase);
   const souvenirs = useGame((s) => s.souvenirs.length);
   const timerRef = useRef();
-  const slowmoRef = useRef();
+  const altitudeRef = useRef();
   const fadeRef = useRef();
   const poemRef = useRef();
   const shownPoemFor = useRef(null);
@@ -24,8 +24,8 @@ export function HUD() {
       lastT = now;
 
       if (timerRef.current) timerRef.current.textContent = formatTime(runtime.timer);
-      if (slowmoRef.current) {
-        slowmoRef.current.style.transform = `scaleX(${runtime.slowmo})`;
+      if (altitudeRef.current) {
+        altitudeRef.current.textContent = `▲ ${Math.max(0, Math.round(runtime.playerPos.y))} m`;
       }
       if (fadeRef.current) {
         runtime.fade += (runtime.fadeTarget - runtime.fade) * Math.min(1, dt * 6);
@@ -63,13 +63,8 @@ export function HUD() {
           <div className="souvenirs">
             ✦ {souvenirs}/{TOTAL_SOUVENIRS}
           </div>
-          <div className="gauges">
-            <div>
-              <div className="gauge-label">Ralenti</div>
-              <div className="gauge slowmo">
-                <div className="fill" ref={slowmoRef} />
-              </div>
-            </div>
+          <div className="altitude" ref={altitudeRef}>
+            ▲ 0 m
           </div>
         </div>
       )}

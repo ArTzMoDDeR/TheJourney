@@ -6,9 +6,9 @@ import { START_POS } from '../constants';
 // entre chapitres (décision de design : pas de checkpoint intermédiaire).
 export const START_CHECKPOINT = { pos: START_POS, killY: -60, label: 'La Chambre' };
 
-export const TOTAL_SOUVENIRS = 8;
+export const TOTAL_SOUVENIRS = 11;
 
-const BEST_KEY = 'thejourney-best-v2';
+const BEST_KEY = 'thejourney-best-v3';
 
 function loadBest() {
   try {

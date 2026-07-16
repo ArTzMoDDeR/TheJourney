@@ -18,7 +18,7 @@ export function Effects() {
   });
 
   return (
-    <EffectComposer disableNormalPass>
+    <EffectComposer disableNormalPass multisampling={2}>
       <Bloom luminanceThreshold={1.0} intensity={0.7} mipmapBlur radius={0.7} />
       <ChromaticAberration offset={offsetVec} />
       <Vignette eskil={false} offset={0.22} darkness={0.72} />

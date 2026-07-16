@@ -13,6 +13,12 @@ import {
   keyboardTexture,
   clockTexture,
   screenTexture,
+  barkTexture,
+  leafTexture,
+  grassTexture,
+  mossStoneTexture,
+  iceTexture,
+  snowTexture,
 } from '../../utils/textures';
 
 // Matériaux partagés (une seule instance chacun → perf), désormais texturés.
@@ -97,6 +103,30 @@ export const M = {
   mug: std({ color: '#c0392b', roughness: 0.35, emissive: '#4a1610', emissiveIntensity: 0.2 }),
   plant: std({ color: '#3f7a3f', roughness: 0.9, emissive: '#14300f', emissiveIntensity: 0.2 }),
   plantPot: std({ color: '#a86a4a', roughness: 0.8 }),
+
+  // — Jungle —
+  bark: std({ map: barkTexture(), roughness: 0.95, emissive: '#1e120a', emissiveIntensity: 0.15 }),
+  leaf: std({ map: leafTexture(), roughness: 0.9, emissive: '#12240e', emissiveIntensity: 0.2 }),
+  leafDark: std({ map: leafTexture('#2e5a28', '#1c3a18'), roughness: 0.95 }),
+  grass: std({ map: grassTexture(), roughness: 1 }),
+  mossStone: std({ map: mossStoneTexture(), roughness: 0.9, emissive: '#141610', emissiveIntensity: 0.12 }),
+  mushroomCap: std({ color: '#c74a3a', roughness: 0.5, emissive: '#5a1a12', emissiveIntensity: 0.3 }),
+  mushroomDots: std({ color: '#f2e8d8', roughness: 0.6 }),
+  vine: std({ color: '#3a5a2c', roughness: 0.9 }),
+  water: std({ color: '#3a8aa0', roughness: 0.2, transparent: true, opacity: 0.7, emissive: '#0e2a34', emissiveIntensity: 0.4 }),
+
+  // — Glace —
+  iceMat: std({ map: iceTexture(), roughness: 0.15, metalness: 0.1, emissive: '#24404e', emissiveIntensity: 0.25 }),
+  snow: std({ map: snowTexture(), roughness: 0.95, emissive: '#3a4048', emissiveIntensity: 0.1 }),
+  iceDeep: std({ color: '#5a9ac2', roughness: 0.2, transparent: true, opacity: 0.85, emissive: '#16344a', emissiveIntensity: 0.4 }),
+  pine: std({ color: '#2e4a34', roughness: 0.95 }),
+
+  // — Espace —
+  hull: std({ map: metalTexture('#9aa2ae', 14), roughness: 0.4, metalness: 0.6, emissive: '#2a2e36', emissiveIntensity: 0.2 }),
+  hullDark: std({ color: '#3c414c', roughness: 0.5, metalness: 0.6 }),
+  solar: std({ color: '#1c2a52', roughness: 0.3, metalness: 0.7, emissive: '#12204a', emissiveIntensity: 0.5 }),
+  asteroid: std({ map: mossStoneTexture(), color: '#9a9088', roughness: 1 }),
+  booster: std({ color: '#ff8c42', roughness: 0.4, emissive: '#c2481a', emissiveIntensity: 0.9 }),
 
   // — Paradis —
   cloud: std({ color: '#ffffff', roughness: 1, emissive: '#fff6e0', emissiveIntensity: 0.4 }),

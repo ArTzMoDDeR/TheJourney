@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
+import { Preload } from '@react-three/drei';
 import { Physics } from '@react-three/rapier';
 import { GRAVITY } from './constants';
 import { initInput } from './utils/input';
@@ -40,7 +41,8 @@ export default function App() {
     <>
       <Canvas
         shadows
-        dpr={[1, 1.75]}
+        dpr={[1, 1.5]}
+        gl={{ antialias: false, powerPreference: 'high-performance' }}
         camera={{ fov: 62, near: 0.1, far: 1800, position: [-20, 5, 42] }}
         onCreated={({ gl }) => {
           glRef.current = gl;
@@ -62,6 +64,9 @@ export default function App() {
           <World />
         </Physics>
         <Effects />
+        {/* précompile shaders et textures au chargement : plus de stutter
+            à la découverte des zones */}
+        <Preload all />
       </Canvas>
 
       <HUD />
