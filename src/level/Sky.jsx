@@ -11,17 +11,14 @@ import { mulberry32 } from '../utils/rng';
 // ville lointaine et montagnes à l'horizon, oiseaux.
 // Aucun de ces éléments n'est affecté par le fog : c'est l'arrière-plan.
 
-// palettes du ciel par altitude [zénith, horizon]
+// palettes du ciel par altitude [zénith, horizon] — plein jour, de plus
+// en plus lumineux à mesure qu'on s'élève vers le ciel
 const SKY_KEYS = [
-  { y: 0, top: '#141024', bot: '#3a2a3e' }, // nuit de la chambre
-  { y: 74, top: '#2a4a48', bot: '#a8c8a0' }, // matin vert de la jungle
-  { y: 165, top: '#6a92b8', bot: '#dfeef8' }, // jour pâle de la glace
-  { y: 262, top: '#2a3555', bot: '#c98a6a' }, // aube de l'école
-  { y: 340, top: '#8a99a8', bot: '#c9ced4' }, // jour blanc du bureau
-  { y: 428, top: '#04050c', bot: '#0c1020' }, // nuit noire de l'espace
-  { y: 496, top: '#04050c', bot: '#141224' }, // l'espace jusqu'au seuil du paradis
-  { y: 508, top: '#e8b96a', bot: '#f4e3c2' }, // heure dorée
-  { y: 556, top: '#f4d9a8', bot: '#fdf6e8' }, // lumière
+  { y: 0, top: '#3f78c0', bot: '#cfe0ee' }, // jour, sol du village
+  { y: 55, top: '#3f78c0', bot: '#d2e2ef' }, // ville
+  { y: 130, top: '#4a86cc', bot: '#dceaf6' }, // falaises
+  { y: 205, top: '#6aa0e0', bot: '#eaf3fc' }, // seuil du ciel
+  { y: 300, top: '#9cc2f0', bot: '#fbfdff' }, // lumière du sommet
 ];
 
 function lerpSky(y, key, out) {
@@ -179,7 +176,7 @@ export function Sky() {
       const a = rng() * Math.PI * 2;
       const r = 30 + rng() * 380;
       pos[i * 3] = Math.cos(a) * r;
-      pos[i * 3 + 1] = 488 + rng() * 12;
+      pos[i * 3 + 1] = 196 + rng() * 10;
       pos[i * 3 + 2] = Math.sin(a) * r;
     }
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -267,35 +264,17 @@ export function Sky() {
       lerpSky(y, 'bot', domeMat.uniforms.uBot.value);
     }
     if (stars.current) {
-      // brillantes la nuit (chambre), à l'aube (école) discrètes,
-      // ÉCLATANTES dans l'espace, douces au paradis
-      const night = THREE.MathUtils.clamp(1 - y / 90, 0, 1);
-      const space = THREE.MathUtils.clamp((y - 400) / 40, 0, 1) * THREE.MathUtils.clamp((530 - y) / 30, 0.35, 1);
-      starMat.opacity = Math.max(night * 0.9, space);
+      // plein jour : quelques étoiles très pâles seulement tout en haut
+      starMat.opacity = THREE.MathUtils.clamp((y - 240) / 60, 0, 0.25);
       stars.current.position.set(runtime.playerPos.x, 0, runtime.playerPos.z);
     }
-    if (moon.current) {
-      moon.current.material.opacity = THREE.MathUtils.clamp(1 - y / 120, 0, 1);
-    }
+    if (moon.current) moon.current.material.opacity = 0; // pas de lune de jour
     if (sun.current) {
-      const day = THREE.MathUtils.clamp((y - 60) / 80, 0, 1) * (y > 420 && y < 500 ? 0.4 : 1);
-      sun.current.material.opacity = day;
-      _c.set('#fff3d0').lerp(new THREE.Color('#ffd98a'), THREE.MathUtils.clamp((y - 480) / 60, 0, 1));
-      sun.current.material.color.copy(_c);
+      sun.current.material.opacity = 1;
+      sun.current.material.color.set('#fff6d8');
     }
-    if (earth.current) {
-      // la Terre apparaît quand on quitte l'atmosphère
-      earthMat.opacity = THREE.MathUtils.clamp((y - 400) / 40, 0, 1);
-      earth.current.rotation.y = t * 0.01;
-    }
-    if (aurora.current) {
-      // aurores boréales au-dessus de la glace
-      auroraMat.opacity = THREE.MathUtils.clamp((y - 150) / 30, 0, 0.7) * THREE.MathUtils.clamp((280 - y) / 30, 0, 1);
-      aurora.current.children.forEach((m, i) => {
-        m.position.y = 330 + Math.sin(t * 0.3 + i * 2) * 15;
-        m.rotation.y = i * 1.2 + Math.sin(t * 0.1 + i) * 0.2;
-      });
-    }
+    if (earth.current) earthMat.opacity = 0;
+    if (aurora.current) auroraMat.opacity = 0;
     // battement d'ailes
     birds.current.forEach((b, i) => {
       if (!b) return;

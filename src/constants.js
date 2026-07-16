@@ -1,45 +1,38 @@
-// Constantes globales du jeu — chapitres, physique, gameplay.
-// Le monde est entièrement fixe : même carte pour tous les joueurs.
+// Constantes globales — une ascension continue façon « Only Up »,
+// habillée de vrais kits 3D (village → ville → falaises → ciel).
+// Une seule carte fixe, montée fluide, plusieurs chemins.
 
-export const BIOMES = [
-  { name: 'bedroom', label: 'La Chambre', from: -80, to: 74, gravity: 1 },
-  { name: 'jungle', label: 'La Jungle', from: 74, to: 168, gravity: 1 },
-  { name: 'ice', label: 'La Glace', from: 168, to: 262, gravity: 1 },
-  { name: 'school', label: "L'École", from: 262, to: 338, gravity: 1 },
-  { name: 'office', label: 'Le Bureau', from: 338, to: 424, gravity: 1 },
-  { name: 'space', label: "L'Espace", from: 424, to: 502, gravity: 0.35 },
-  { name: 'paradise', label: 'Le Paradis', from: 502, to: 700, gravity: 0.55 },
+export const BANDS = [
+  { name: 'village', label: 'Le Village', from: -20, to: 55 },
+  { name: 'city', label: 'La Ville', from: 55, to: 130 },
+  { name: 'cliffs', label: 'Les Falaises', from: 130, to: 205 },
+  { name: 'sky', label: 'Le Ciel', from: 205, to: 320 },
 ];
 
-// Une vie, une ascension : chaque chapitre a son vers.
 export const POEMS = {
-  bedroom: 'Tout commence dans une chambre, la nuit.',
-  jungle: 'On grandit sauvage. Tout est vivant, tout est jeu.',
-  ice: 'Parfois le monde se fige. On avance quand même.',
-  school: "À l'aube, on apprend les règles.",
-  office: 'Puis les jours se ressemblent. On oublie pourquoi on monte.',
-  space: 'Si haut que plus rien ne pèse. La Terre est si petite, en bas.',
-  paradise: 'Un jour, on lâche prise. Et tout devient léger.',
+  village: 'Tout commence en bas, les pieds dans la poussière.',
+  city: 'On monte vers les lumières, toujours plus haut.',
+  cliffs: 'Là où la pierre remplace les murs, on apprend le vertige.',
+  sky: 'Et puis un jour, il ne reste que le ciel.',
 };
 
-export const FINISH_Y = 556;
-
-export const GRAVITY = -28;
+export const FINISH_Y = 300;
+export const GRAVITY = -30;
 
 // Déplacement
-export const WALK_SPEED = 6.5;
-export const SPRINT_SPEED = 11;
-export const JUMP_VELOCITY = 11.5;
-export const CLIMB_SPEED = 4.2; // sur les échelles
+export const WALK_SPEED = 7;
+export const SPRINT_SPEED = 12;
+export const JUMP_VELOCITY = 12.5;
+export const CLIMB_SPEED = 4.4;
 
-// Slow motion (clic droit) — sans jauge, un outil de précision libre
-export const SLOWMO_SCALE = 0.3;
+// Slow motion (clic droit) — libre, sans jauge
+export const SLOWMO_SCALE = 0.32;
 
-export const START_POS = [-20, 1.5, 30];
+export const START_POS = [0, 1.6, 0];
 
-export function biomeAt(y) {
-  for (let i = BIOMES.length - 1; i >= 0; i--) {
-    if (y >= BIOMES[i].from) return BIOMES[i];
+export function bandAt(y) {
+  for (let i = BANDS.length - 1; i >= 0; i--) {
+    if (y >= BANDS[i].from) return BANDS[i];
   }
-  return BIOMES[0];
+  return BANDS[0];
 }

@@ -2,7 +2,44 @@
 // SFX synthétisés, filtre global pour le slow-motion. Aucun asset à charger.
 
 const CHORDS = {
-  // fréquences des nappes par biome (accords), + gamme pour les mélodies
+  // — bandes de l'ascension —
+  village: {
+    pad: [130.81, 196.0, 261.63], // C3 G3 C4 — chaleureux, terrien
+    scale: [523.25, 587.33, 659.25, 783.99, 880.0], // pentatonique C
+    pluckType: 'triangle',
+    padGain: 0.05,
+    pluckGain: 0.04,
+    pluckEvery: [1.4, 3.2],
+    filter: 2200,
+  },
+  city: {
+    pad: [110.0, 164.81, 220.0], // A2 E3 A3 — urbain, tendu
+    scale: [440.0, 523.25, 659.25, 698.46], // A mineur
+    pluckType: 'square',
+    padGain: 0.04,
+    pluckGain: 0.02,
+    pluckEvery: [1.0, 2.0],
+    filter: 1500,
+  },
+  cliffs: {
+    pad: [98.0, 146.83, 220.0, 293.66], // G2 D3 A3 D4 — ouvert, aérien
+    scale: [587.33, 659.25, 783.99, 880.0, 987.77], // D
+    pluckType: 'triangle',
+    padGain: 0.05,
+    pluckGain: 0.045,
+    pluckEvery: [2.0, 4.5],
+    filter: 3200,
+  },
+  sky: {
+    pad: [261.63, 392.0, 523.25, 659.25], // C4 G4 C5 E5 — lumineux
+    scale: [1046.5, 1174.66, 1318.51, 1567.98], // aigus
+    pluckType: 'sine',
+    padGain: 0.06,
+    pluckGain: 0.035,
+    pluckEvery: [2.6, 5.5],
+    filter: 5200,
+  },
+  // (anciennes bandes, conservées inertes)
   bedroom: {
     pad: [130.81, 196.0, 261.63], // C3 G3 C4 — chaleureux
     scale: [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5], // pentatonique C — boîte à musique
@@ -72,7 +109,7 @@ class AudioSystem {
   constructor() {
     this.ctx = null;
     this.started = false;
-    this.biome = 'bedroom';
+    this.biome = 'village';
     this.pads = {}; // par biome : { gain, oscs }
     this.pluckTimer = null;
     this.slow = false;
@@ -90,7 +127,7 @@ class AudioSystem {
     const ctx = this.ctx;
 
     this.master = ctx.createGain();
-    this.master.gain.value = 0.9;
+    this.master.gain.value = 0.9 * (this.masterVolume ?? 1);
 
     // Filtre global : ferme le son pendant le slow-motion et la pause
     this.globalFilter = ctx.createBiquadFilter();
@@ -193,6 +230,12 @@ class AudioSystem {
     g.connect(this.musicBus);
     o.start(t);
     o.stop(t + 2);
+  }
+
+  setMasterVolume(v) {
+    this.masterVolume = v;
+    if (!this.master || !this.ctx) return;
+    this.master.gain.setTargetAtTime(0.9 * v, this.ctx.currentTime, 0.05);
   }
 
   setBiome(name) {

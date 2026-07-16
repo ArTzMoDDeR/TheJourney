@@ -56,19 +56,20 @@ export function findBouncer(fx, fz, feetY) {
   return null;
 }
 
-// Échelle la plus proche devant laquelle se trouve (px,py,pz), sinon null.
+// Échelle la plus proche (des DEUX côtés), sinon null. On peut ainsi grimper
+// quelle que soit l'orientation de l'échelle : plus jamais d'échelle « bouchée ».
 export function findLadder(px, py, pz) {
   let best = null;
   let bestD = Infinity;
   for (const l of ladders) {
-    if (py < l.y0 - 0.4 || py > l.y1 + 1.0) continue;
+    if (py < l.y0 - 0.4 || py > l.y1 + 1.2) continue;
     const dx = px - l.cx;
     const dz = pz - l.cz;
-    const front = dx * l.nx + dz * l.nz; // distance devant la face
-    if (front < -0.25 || front > 1.0) continue;
+    const front = dx * l.nx + dz * l.nz; // distance à la face (signée)
+    if (Math.abs(front) > 1.0) continue; // proche du plan, peu importe le côté
     const lat = -dx * l.nz + dz * l.nx; // coordonnée latérale
     if (Math.abs(lat) > l.halfW + 0.35) continue;
-    const d = Math.abs(front - 0.45) + Math.abs(lat) * 0.2;
+    const d = Math.abs(front) + Math.abs(lat) * 0.2;
     if (d < bestD) {
       bestD = d;
       best = l;

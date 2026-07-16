@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Preload } from '@react-three/drei';
 import { Physics } from '@react-three/rapier';
@@ -12,7 +12,7 @@ import { Stepper } from './components/systems/Stepper';
 import { EnvironmentManager } from './components/systems/EnvironmentManager';
 import { Effects } from './components/systems/Effects';
 import { HUD } from './components/ui/HUD';
-import { TitleScreen, PauseMenu, EndScreen, ControlsHint } from './components/ui/Screens';
+import { TitleScreen, PauseMenu, EndScreen, ControlsHint, Loading } from './components/ui/Screens';
 
 export default function App() {
   const glRef = useRef(null);
@@ -57,12 +57,14 @@ export default function App() {
         <EnvironmentManager />
         {/* Physique en pause permanente : avancée manuellement par <Stepper/>
             avec le timeScale (slow-motion, pause propre). */}
-        <Physics paused gravity={[0, GRAVITY, 0]} interpolate={false} updatePriority={-1}>
-          <Stepper />
-          <CharacterController />
-          <CameraRig />
-          <World />
-        </Physics>
+        <Suspense fallback={null}>
+          <Physics paused gravity={[0, GRAVITY, 0]} interpolate={false} updatePriority={-1}>
+            <Stepper />
+            <CharacterController />
+            <CameraRig />
+            <World />
+          </Physics>
+        </Suspense>
         <Effects />
         {/* précompile shaders et textures au chargement : plus de stutter
             à la découverte des zones */}
@@ -74,6 +76,7 @@ export default function App() {
       <TitleScreen onStart={lockPointer} />
       <PauseMenu onResume={lockPointer} />
       <EndScreen onRestart={lockPointer} />
+      <Loading />
     </>
   );
 }

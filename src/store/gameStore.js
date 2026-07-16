@@ -18,8 +18,20 @@ function loadBest() {
   }
 }
 
+function loadLang() {
+  try {
+    const s = localStorage.getItem('thejourney-lang');
+    if (s) return s;
+  } catch {
+    /* ignore */
+  }
+  return (navigator.language || 'fr').startsWith('en') ? 'en' : 'fr';
+}
+
 export const useGame = create((set, get) => ({
   phase: 'title', // title | playing | paused | finished
+  language: loadLang(),
+  volume: 0.9,
   checkpoint: START_CHECKPOINT,
   splits: [], // [{ name, label, t }] — temps au passage de chaque chapitre
   souvenirs: [], // ids des souvenirs ramassés pendant ce run
@@ -27,6 +39,16 @@ export const useGame = create((set, get) => ({
   best: loadBest(),
   isNewBest: false,
   resetToken: 0, // incrémenté à chaque restart : le contrôleur téléporte le joueur
+
+  setLanguage: (l) => {
+    try {
+      localStorage.setItem('thejourney-lang', l);
+    } catch {
+      /* ignore */
+    }
+    set({ language: l });
+  },
+  setVolume: (v) => set({ volume: v }),
 
   start: () => set({ phase: 'playing' }),
   pause: () => {

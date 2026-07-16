@@ -32,9 +32,9 @@ export const runtime = {
   // caméra
   camYaw: 0,
 
-  // monde
-  biome: 'bedroom',
-  biomeLabel: 'La Chambre',
+  // monde (bande actuelle)
+  biome: 'village',
+  biomeLabel: 'Le Village',
   biomeChangedAt: 0,
 
   // UI
