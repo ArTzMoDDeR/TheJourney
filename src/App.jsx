@@ -8,7 +8,6 @@ import { useGame } from './store/gameStore';
 import { CharacterController } from './components/player/CharacterController';
 import { CameraRig } from './components/player/CameraRig';
 import { World } from './level/World';
-import { Stepper } from './components/systems/Stepper';
 import { EnvironmentManager } from './components/systems/EnvironmentManager';
 import { Effects } from './components/systems/Effects';
 import { HUD } from './components/ui/HUD';
@@ -60,8 +59,9 @@ export default function App() {
         {/* Physique en pause permanente : avancée manuellement par <Stepper/>
             avec le timeScale (slow-motion, pause propre). */}
         <Suspense fallback={null}>
-          <Physics paused gravity={[0, GRAVITY, 0]} interpolate={false} updatePriority={-1}>
-            <Stepper />
+          {/* physique en mode NORMAL : le KinematicCharacterController gère
+              le déplacement du joueur, les autres corps sont fixes/kinematic */}
+          <Physics gravity={[0, GRAVITY, 0]} interpolate={false}>
             <CharacterController />
             <CameraRig />
             <World />
